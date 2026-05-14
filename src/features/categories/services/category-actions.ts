@@ -1,7 +1,7 @@
 "use server"
 
-import { db } from "@/lib/db";
-import { categories } from "@/lib/db/schema";
+import { db } from "@/db";
+import { categories } from "@/db/schema";
 
 export async function getCategories() {
     try {
