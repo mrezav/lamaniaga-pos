@@ -1,4 +1,4 @@
-import { pgTable, foreignKey, unique, pgPolicy, uuid, text, timestamp, boolean, numeric, integer, jsonb } from "drizzle-orm/pg-core"
+import { pgTable, foreignKey, unique, pgPolicy, uuid, text, timestamp, boolean, numeric, integer, jsonb, index, check } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 import { stores } from "./stores";
 import { categories } from "./categories";
@@ -24,11 +24,12 @@ export const products = pgTable("products", {
         foreignColumns: [stores.id],
         name: "products_store_id_fkey"
     }).onDelete("cascade"),
-    unique("products_slug_key").on(table.slug),
     pgPolicy("Manage own products", {
-        as: "permissive", for: "all", to: ["public"], using: sql`(store_id IN ( SELECT stores.id
-   FROM stores
-  WHERE (stores.owner_id = auth.uid())))` }),
+        as: "permissive", for: "all", to: ["public"], using: sql`store_id IN ( SELECT owned_store_ids())`
+    }),
+    unique("products_slug_key").on(table.slug),
+    index("products_store_id_idx").on(table.storeId),
+    index("products_category_id_idx").on(table.categoryId),
 ]);
 
 export const productVariants = pgTable("product_variants", {
@@ -51,9 +52,12 @@ export const productVariants = pgTable("product_variants", {
         foreignColumns: [stores.id],
         name: "product_variants_store_id_fkey"
     }).onDelete("cascade"),
-    unique("product_variants_sku_key").on(table.sku),
     pgPolicy("Manage own variants", {
-        as: "permissive", for: "all", to: ["public"], using: sql`(store_id IN ( SELECT stores.id
-   FROM stores
-  WHERE (stores.owner_id = auth.uid())))` }),
+        as: "permissive", for: "all", to: ["public"], using: sql`store_id IN ( SELECT owned_store_ids())`
+    }),
+    unique("product_variants_sku_key").on(table.sku),
+    index("product_variants_store_id_idx").on(table.storeId),
+    index("product_variants_product_id_idx").on(table.productId),
+    check("product_variants_price_check", sql`price >= 0`),
+    check("product_variants_stock_check", sql`stock >= 0`),
 ]);
