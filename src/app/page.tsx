@@ -1,4 +1,4 @@
-import { getCategories } from "@/features/categories/services/category-actions";
+import { getCategories } from "@/features/products/services/category-actions";
 
 export default async function Home() {
   const { data: categories, error } = await getCategories("00000000-0000-0000-0000-000000000000");
