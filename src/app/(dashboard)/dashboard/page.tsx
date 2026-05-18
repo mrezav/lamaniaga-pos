@@ -3,8 +3,8 @@ import { PlusCircle, Users } from "lucide-react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { db } from "@/db"
-import { profiles, stores } from "@/db/schema"
-import { eq, or } from "drizzle-orm"
+import { profiles, stores, storeMembers } from "@/db/schema"
+import { eq, and, inArray } from "drizzle-orm"
 import { redirect } from "next/navigation"
 import { OnboardingHeader } from "@/components/shared/OnboardingHeader"
 import { StoreSelector } from "./components/StoreSelector"
@@ -27,20 +27,27 @@ export default async function DashboardPage() {
     where: eq(stores.ownerId, user.id),
   })
 
-  // Query store the user works at
-  let workedStore = null
-  if (userProfile?.storeId) {
-    workedStore = await db.query.stores.findFirst({
-      where: eq(stores.id, userProfile.storeId),
+  // Query stores the user works at via the storeMembers table
+  const memberRelations = await db.query.storeMembers.findMany({
+    where: and(
+      eq(storeMembers.userId, user.id),
+      eq(storeMembers.status, "active")
+    ),
+  })
+
+  const memberStoreIds = memberRelations.map((mr) => mr.storeId)
+
+  let memberStores: typeof ownedStores = []
+  if (memberStoreIds.length > 0) {
+    memberStores = await db.query.stores.findMany({
+      where: inArray(stores.id, memberStoreIds),
     })
   }
 
   // Combine them uniquely by store ID
   const storeMap = new Map<string, any>()
   ownedStores.forEach((s) => storeMap.set(s.id, s))
-  if (workedStore) {
-    storeMap.set(workedStore.id, workedStore)
-  }
+  memberStores.forEach((s) => storeMap.set(s.id, s))
 
   const allStores = Array.from(storeMap.values())
 

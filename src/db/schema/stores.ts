@@ -31,6 +31,4 @@ export const stores = pgTable("stores", {
         .on(table.ownerId),
     index("stores_name_idx")
         .on(table.name),
-    uniqueIndex("stores_slug_unique")
-        .on(table.slug),
 ]);

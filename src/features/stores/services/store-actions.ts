@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/db"
-import { stores, profiles } from "@/db/schema"
+import { stores, profiles, storeMembers } from "@/db/schema"
 import { eq, sql } from "drizzle-orm"
 
 /**
@@ -104,6 +104,16 @@ export async function createStoreTransaction(input: CreateStoreInput) {
           status: "active",
         })
         .where(eq(profiles.id, input.ownerId))
+
+      // 3. Create store member relationship
+      await tx
+        .insert(storeMembers)
+        .values({
+          userId: input.ownerId,
+          storeId: newStore.id,
+          role: "owner",
+          status: "active",
+        })
 
       return { data: newStore, error: null }
     })

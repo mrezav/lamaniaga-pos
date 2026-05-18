@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { db } from "@/db"
-import { profiles, stores } from "@/db/schema"
-import { eq } from "drizzle-orm"
+import { profiles, stores, storeMembers } from "@/db/schema"
+import { eq, and } from "drizzle-orm"
 import { redirect } from "next/navigation"
 import { StoreLayoutClient } from "./components/StoreLayoutClient"
 
@@ -37,16 +37,25 @@ export default async function StoreLayout({ children, params }: StoreLayoutProps
     redirect("/dashboard")
   }
 
+  // Query store membership record
+  const memberRecord = await db.query.storeMembers.findFirst({
+    where: and(
+      eq(storeMembers.storeId, store.id),
+      eq(storeMembers.userId, user.id),
+      eq(storeMembers.status, "active")
+    ),
+  })
+
   // Multi-Tenant Security Authorization Guard
   const isOwner = store.ownerId === user.id
-  const isStaff = userProfile.storeId === store.id && userProfile.status === "active"
+  const isStaff = !!memberRecord
   const isAllowed = isOwner || isStaff
 
   if (!isAllowed) {
     redirect("/dashboard")
   }
 
-  // Self-Healing Sync: Ensure active profile storeId matches the current tenant slug URL
+  // Self-Healing Sync: Ensure active profile storeId (acts as lastActiveStoreId) matches the current tenant slug URL
   if (userProfile.storeId !== store.id) {
     await db
       .update(profiles)
