@@ -27,8 +27,35 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // refreshing the auth token
-  await supabase.auth.getUser()
+  // Memvalidasi sesi user
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const pathname = request.nextUrl.pathname
+
+  // Rute-rute yang boleh diakses tanpa login
+  const isPublicRoute = 
+    pathname === '/' ||
+    pathname.startsWith('/login') || 
+    pathname.startsWith('/register') || 
+    pathname.startsWith('/auth') || 
+    pathname.startsWith('/verify-email') ||
+    pathname.startsWith('/api')
+
+  // Logika Proteksi: Hanya jika rute BUKAN publik
+  if (!isPublicRoute) {
+    // Jika tidak ada user, baru arahkan ke login
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    
+    // Kita hilangkan pengecekan email_confirmed_at di sini 
+    // agar proses verifikasi di auth/callback bisa berjalan lancar
+  }
+
+  // Jika user sudah login, cegah akses kembali ke login/register
+  if (user && (pathname.startsWith('/login') || pathname.startsWith('/register'))) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
 
   return supabaseResponse
 }
