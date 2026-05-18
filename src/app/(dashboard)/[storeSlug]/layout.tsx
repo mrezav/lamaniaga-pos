@@ -1,34 +1,63 @@
-export default async function StoreLayout({
-    children,
-    params,
-}: {
-    children: React.ReactNode
-    params: Promise<{ storeSlug: string }>
-}) {
-    const { storeSlug } = await params;
+import { createClient } from "@/lib/supabase/server"
+import { db } from "@/db"
+import { profiles, stores } from "@/db/schema"
+import { eq } from "drizzle-orm"
+import { redirect } from "next/navigation"
+import { StoreLayoutClient } from "./components/StoreLayoutClient"
 
-    return (
-        <div className="flex flex-col flex-1">
-            {/* Store-Specific Sub-Header */}
-            <div className="bg-white border-b border-slate-200 px-6 py-4 shadow-sm relative z-10">
-                <div className="container mx-auto flex items-center gap-4">
-                    <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-100 shrink-0">
-                        <span className="text-white font-bold text-2xl">{storeSlug[0].toUpperCase()}</span>
-                    </div>
-                    <div>
-                        <h2 className="text-xl font-bold text-slate-900 leading-tight capitalize">{storeSlug.replace(/-/g, ' ')}</h2>
-                        <div className="flex items-center gap-2 mt-1">
-                            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Toko Aktif</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+interface StoreLayoutProps {
+  children: React.ReactNode
+  params: Promise<{ storeSlug: string }>
+}
 
-            {/* Content Area */}
-            <div className="container mx-auto p-6 lg:p-8">
-                {children}
-            </div>
-        </div>
-    )
+export default async function StoreLayout({ children, params }: StoreLayoutProps) {
+  const { storeSlug } = await params
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect("/login")
+  }
+
+  // Get user profile
+  const userProfile = await db.query.profiles.findFirst({
+    where: eq(profiles.id, user.id),
+  })
+
+  if (!userProfile) {
+    redirect("/dashboard")
+  }
+
+  // Fetch the current store by slug
+  const store = await db.query.stores.findFirst({
+    where: eq(stores.slug, storeSlug),
+  })
+
+  if (!store) {
+    redirect("/dashboard")
+  }
+
+  // Multi-Tenant Security Authorization Guard
+  const isOwner = store.ownerId === user.id
+  const isStaff = userProfile.storeId === store.id && userProfile.status === "active"
+  const isAllowed = isOwner || isStaff
+
+  if (!isAllowed) {
+    redirect("/dashboard")
+  }
+
+  // Self-Healing Sync: Ensure active profile storeId matches the current tenant slug URL
+  if (userProfile.storeId !== store.id) {
+    await db
+      .update(profiles)
+      .set({ storeId: store.id })
+      .where(eq(profiles.id, user.id))
+    userProfile.storeId = store.id
+  }
+
+  return (
+    <StoreLayoutClient store={store} profile={userProfile}>
+      {children}
+    </StoreLayoutClient>
+  )
 }

@@ -112,3 +112,19 @@ export async function createStoreTransaction(input: CreateStoreInput) {
     return { data: null, error: error?.message || "Terjadi kesalahan saat memproses data di server" }
   }
 }
+
+/**
+ * Server Action to set the user's active storeId.
+ */
+export async function setActiveStoreAction(storeId: string, userId: string) {
+  try {
+    await db
+      .update(profiles)
+      .set({ storeId })
+      .where(eq(profiles.id, userId))
+    return { success: true }
+  } catch (error: any) {
+    console.error("Failed to setActiveStoreAction:", error)
+    return { success: false, error: error?.message || "Gagal mengubah toko aktif" }
+  }
+}

@@ -21,7 +21,7 @@ import {
   Check,
 } from "lucide-react"
 
-interface DashboardLayoutClientProps {
+interface StoreLayoutClientProps {
   children: React.ReactNode
   store: {
     id: string
@@ -36,7 +36,7 @@ interface DashboardLayoutClientProps {
   }
 }
 
-export function DashboardLayoutClient({ children, store, profile }: DashboardLayoutClientProps) {
+export function StoreLayoutClient({ children, store, profile }: StoreLayoutClientProps) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -70,23 +70,23 @@ export function DashboardLayoutClient({ children, store, profile }: DashboardLay
   const menuItems = [
     {
       name: "Dashboard",
-      href: "/dashboard",
+      href: `/${store.slug}`,
       icon: LayoutDashboard,
     },
     {
       name: "Product",
-      href: "/dashboard/products",
+      href: `/${store.slug}/products`,
       icon: Package,
     },
     {
       name: "Category",
-      href: "/dashboard/categories",
+      href: `/${store.slug}/categories`,
       icon: FolderTree,
     },
   ]
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 font-sans">
+    <div className="flex h-screen overflow-hidden bg-slate-50 font-sans w-full">
       {/* 1. Sidebar Navigation */}
       <aside
         className={`fixed inset-y-0 left-0 z-20 flex flex-col h-full bg-[#0F172A] border-r border-[#1E293B] text-slate-300 transition-all duration-300 ${
@@ -198,13 +198,20 @@ export function DashboardLayoutClient({ children, store, profile }: DashboardLay
         <header className="flex items-center justify-between h-20 px-8 bg-white border-b border-slate-200 shrink-0">
           <div>
             <h2 className="text-lg font-bold text-slate-800 capitalize tracking-tight">
-              {pathname === "/dashboard"
+              {pathname === `/${store.slug}`
                 ? "Ringkasan Toko"
                 : pathname.split("/").pop()}
             </h2>
           </div>
 
           <div className="flex items-center gap-6">
+            {/* Store Switcher Option if user has multiple stores or just links to Selector */}
+            <Link href="/dashboard">
+              <button className="text-xs font-bold text-slate-500 hover:text-blue-600 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 hover:border-blue-200 transition-colors">
+                Ganti Toko
+              </button>
+            </Link>
+
             {/* Notification Icon */}
             <button className="relative p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-50 transition-colors group">
               <Bell className="w-5 h-5" />
@@ -239,7 +246,7 @@ export function DashboardLayoutClient({ children, store, profile }: DashboardLay
                       <p className="font-bold text-slate-700 text-sm truncate mt-0.5">{profile.fullName}</p>
                     </div>
                     <Link
-                      href="/dashboard/settings"
+                      href={`/${store.slug}/settings`}
                       onClick={() => setIsUserMenuOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors font-semibold"
                     >
