@@ -60,6 +60,14 @@ interface CreateStoreInput {
 export async function createStoreTransaction(input: CreateStoreInput) {
   try {
     return await db.transaction(async (tx) => {
+      // 0. Check if user already has an active store
+      const userProfile = await tx.query.profiles.findFirst({
+        where: eq(profiles.id, input.ownerId),
+      })
+      if (userProfile?.storeId) {
+        throw new Error("Anda sudah terdaftar di suatu toko")
+      }
+
       // Set session variable 'request.jwt.claims' to simulate Supabase auth.uid()
       const jwtClaims = JSON.stringify({ sub: input.ownerId })
       await tx.execute(

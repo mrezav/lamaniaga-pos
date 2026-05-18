@@ -71,55 +71,66 @@ export function StoreForm({ userId }: StoreFormProps) {
     mutationFn: async (values: CreateStoreSchemaType) => {
       let logoUrl = ""
       let bannerUrl = ""
+      const uploadedPaths: string[] = []
 
-      // 1. Upload Logo if provided
-      if (values.logo instanceof File) {
-        const ext = values.logo.name.split(".").pop()
-        const path = `${values.slug}/public-assets/logo-${Date.now()}.${ext}`
-        const { data: logoData, error: uploadErr } = await supabase.storage
-          .from("stores")
-          .upload(path, values.logo, { upsert: true })
+      try {
+        // 1. Upload Logo if provided
+        if (values.logo instanceof File) {
+          const ext = values.logo.name.split(".").pop()
+          const path = `${values.slug}/public-assets/logo-${Date.now()}.${ext}`
+          const { data: logoData, error: uploadErr } = await supabase.storage
+            .from("stores")
+            .upload(path, values.logo, { upsert: true })
 
-        if (uploadErr) {
-          throw new Error(`Gagal mengunggah logo: ${uploadErr.message}`)
+          if (uploadErr) {
+            throw new Error(`Gagal mengunggah logo: ${uploadErr.message}`)
+          }
+
+          uploadedPaths.push(logoData.path)
+          const { data } = supabase.storage.from("stores").getPublicUrl(logoData.path)
+          logoUrl = data.publicUrl
         }
 
-        const { data } = supabase.storage.from("stores").getPublicUrl(logoData.path)
-        logoUrl = data.publicUrl
-      }
+        // 2. Upload Banner if provided
+        if (values.banner instanceof File) {
+          const ext = values.banner.name.split(".").pop()
+          const path = `${values.slug}/public-assets/banner-${Date.now()}.${ext}`
+          const { data: bannerData, error: uploadErr } = await supabase.storage
+            .from("stores")
+            .upload(path, values.banner, { upsert: true })
 
-      // 2. Upload Banner if provided
-      if (values.banner instanceof File) {
-        const ext = values.banner.name.split(".").pop()
-        const path = `${values.slug}/public-assets/banner-${Date.now()}.${ext}`
-        const { data: bannerData, error: uploadErr } = await supabase.storage
-          .from("stores")
-          .upload(path, values.banner, { upsert: true })
+          if (uploadErr) {
+            throw new Error(`Gagal mengunggah banner: ${uploadErr.message}`)
+          }
 
-        if (uploadErr) {
-          throw new Error(`Gagal mengunggah banner: ${uploadErr.message}`)
+          uploadedPaths.push(bannerData.path)
+          const { data } = supabase.storage.from("stores").getPublicUrl(bannerData.path)
+          bannerUrl = data.publicUrl
         }
 
-        const { data } = supabase.storage.from("stores").getPublicUrl(bannerData.path)
-        bannerUrl = data.publicUrl
+        // 3. Insert Store & Update Profile
+        const result = await createStoreTransaction({
+          name: values.name,
+          slug: values.slug,
+          address: values.address || undefined,
+          phoneNumber: values.phoneNumber || undefined,
+          logoUrl: logoUrl || undefined,
+          bannerUrl: bannerUrl || undefined,
+          ownerId: userId,
+        })
+
+        if (result.error) {
+          throw new Error(result.error)
+        }
+
+        return result.data
+      } catch (err: any) {
+        // Rollback / clean up uploaded files if transaction failed
+        if (uploadedPaths.length > 0) {
+          await supabase.storage.from("stores").remove(uploadedPaths)
+        }
+        throw err
       }
-
-      // 3. Insert Store & Update Profile
-      const result = await createStoreTransaction({
-        name: values.name,
-        slug: values.slug,
-        address: values.address || undefined,
-        phoneNumber: values.phoneNumber || undefined,
-        logoUrl: logoUrl || undefined,
-        bannerUrl: bannerUrl || undefined,
-        ownerId: userId,
-      })
-
-      if (result.error) {
-        throw new Error(result.error)
-      }
-
-      return result.data
     },
     onSuccess: (data) => {
       showToast("Toko berhasil dibuat! Mengalihkan ke dashboard...", "success")

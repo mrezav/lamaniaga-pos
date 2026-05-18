@@ -3,6 +3,9 @@ import { redirect } from "next/navigation"
 import { StoreForm } from "@/features/stores/components/StoreForm"
 import { Store, ChevronLeft } from "lucide-react"
 import Link from "next/link"
+import { db } from "@/db"
+import { profiles } from "@/db/schema"
+import { eq } from "drizzle-orm"
 
 export default async function CreateStorePage() {
   const supabase = await createClient()
@@ -10,6 +13,15 @@ export default async function CreateStorePage() {
 
   if (!user) {
     redirect("/login")
+  }
+
+  // Page Guard: If user already has a store, redirect to dashboard
+  const userProfile = await db.query.profiles.findFirst({
+    where: eq(profiles.id, user.id)
+  })
+
+  if (userProfile?.storeId) {
+    redirect("/dashboard")
   }
 
   return (
