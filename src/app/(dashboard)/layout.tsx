@@ -18,21 +18,31 @@ export default async function DashboardLayout({
     }
 
     // Pengecekan profil (self-healing jika profil tidak terbuat di callback)
+    let userProfile = null
     try {
-        const existingProfile = await db.query.profiles.findFirst({
+        userProfile = await db.query.profiles.findFirst({
             where: eq(profiles.id, user.id)
         })
 
-        if (!existingProfile) {
+        if (!userProfile) {
             const fullName = user.user_metadata.full_name || "User"
-            await db.insert(profiles).values({
+            const inserted = await db.insert(profiles).values({
                 id: user.id,
                 fullName: fullName,
                 status: "idle",
-            }).onConflictDoNothing({ target: profiles.id })
+            }).onConflictDoNothing({ target: profiles.id }).returning()
+            
+            userProfile = inserted[0] || await db.query.profiles.findFirst({
+                where: eq(profiles.id, user.id)
+            })
         }
     } catch (error) {
         console.error("Error verifying/creating profile in dashboard layout:", error)
+    }
+
+    // If user has a store, bypass the onboarding layout header
+    if (userProfile?.storeId) {
+        return <>{children}</>
     }
 
     return (
