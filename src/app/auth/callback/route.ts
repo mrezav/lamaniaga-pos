@@ -22,7 +22,7 @@ export async function GET(request: Request) {
                     id: data.user.id,
                     fullName: fullName,
                     status: "idle",
-                }).onConflictDoNothing(); // Mencegah error jika profil sudah ada
+                }).onConflictDoNothing({ target: profiles.id }); // Mencegah error jika profil sudah ada
                 
                 return NextResponse.redirect(`${origin}${next}`)
             } catch (dbError) {

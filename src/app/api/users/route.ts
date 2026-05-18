@@ -37,11 +37,8 @@ export async function POST(request: Request) {
             // Supabase returns specific error for existing users if configured, 
             // but often it's generic for security. 
             // We'll handle the "already registered" case if possible.
-            if (error.message.toLowerCase().includes("already registered") || error.status === 400) {
-                 // Check if it's really "already registered"
-                 if (error.message.toLowerCase().includes("already registered")) {
-                    return NextResponse.json({ error: "email sudah terdaftar" }, { status: 400 });
-                 }
+            if (error.message.toLowerCase().includes("already registered")) {
+                return NextResponse.json({ error: "email sudah terdaftar" }, { status: 400 });
             }
             return NextResponse.json({ error: error.message }, { status: 400 });
         }
