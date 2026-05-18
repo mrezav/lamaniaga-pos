@@ -1,4 +1,4 @@
-import { pgTable, foreignKey, pgPolicy, uuid, text, timestamp, boolean, index } from "drizzle-orm/pg-core"
+import { pgTable, foreignKey, pgPolicy, uuid, text, timestamp, boolean, index, uniqueIndex } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 import { users } from "./users";
 
@@ -20,7 +20,17 @@ export const stores = pgTable("stores", {
         foreignColumns: [users.id],
         name: "stores_owner_id_fkey"
     }),
-    pgPolicy("Manage own store", { as: "permissive", for: "all", to: ["public"], using: sql`(auth.uid() = owner_id)` }),
-    index("stores_owner_id_idx").on(table.ownerId),
-    index("stores_name_idx").on(table.name)
+
+    pgPolicy("Manage own store", {
+        as: "permissive",
+        for: "all",
+        to: ["public"],
+        using: sql`(auth.uid() = owner_id)`
+    }),
+    index("stores_owner_id_idx")
+        .on(table.ownerId),
+    index("stores_name_idx")
+        .on(table.name),
+    uniqueIndex("stores_slug_unique")
+        .on(table.slug),
 ]);

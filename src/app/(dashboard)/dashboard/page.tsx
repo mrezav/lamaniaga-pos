@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { PlusCircle, Users } from "lucide-react"
+import Link from "next/link"
 
 export default function DashboardPage() {
     return (
@@ -20,9 +21,11 @@ export default function DashboardPage() {
                             <h2 className="text-2xl font-bold text-slate-900">Buat Toko Baru</h2>
                             <p className="text-slate-500 leading-relaxed">Mulai dari awal dan kelola produk, transaksi, dan stok Anda sendiri.</p>
                         </div>
-                        <Button className="w-full h-14 text-lg font-bold rounded-2xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all">
-                            Buat Toko Sekarang
-                        </Button>
+                        <Link href="/store/create" className="w-full">
+                            <Button className="w-full h-14 text-lg font-bold rounded-2xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all">
+                                Buat Toko Sekarang
+                            </Button>
+                        </Link>
                     </div>
 
                     {/* Section 2: Bergabung dengan Toko */}
