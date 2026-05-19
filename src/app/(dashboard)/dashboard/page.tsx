@@ -9,6 +9,8 @@ import { redirect } from "next/navigation"
 import { OnboardingHeader } from "@/components/shared/OnboardingHeader"
 import { StoreSelector } from "./components/StoreSelector"
 
+import { JoinStoreForm } from "@/features/stores/components/JoinStoreForm"
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -74,31 +76,13 @@ export default async function DashboardPage() {
                 </div>
                 <Link href="/store/create" className="w-full">
                   <Button className="w-full h-14 text-lg font-bold rounded-2xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all">
-                    Buat Toko Sekarang
+                     Buat Toko Sekarang
                   </Button>
                 </Link>
               </div>
 
               {/* Section 2: Bergabung dengan Toko */}
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-6 hover:shadow-lg transition-all duration-300 group animate-in fade-in slide-in-from-right-4 duration-700">
-                <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Users className="w-12 h-12" />
-                </div>
-                <div className="space-y-2 w-full">
-                  <h2 className="text-2xl font-bold text-slate-900">Gabung Toko</h2>
-                  <p className="text-slate-500 leading-relaxed">Gunakan kode akses untuk bergabung dengan toko yang sudah ada.</p>
-                </div>
-                <div className="w-full space-y-4">
-                  <input
-                    type="text"
-                    className="w-full px-4 h-14 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-slate-50/50 text-center font-mono text-lg tracking-widest uppercase"
-                    placeholder="KODE-TOKO"
-                  />
-                  <Button variant="secondary" className="w-full h-14 text-lg font-bold rounded-2xl bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-none transition-colors">
-                    Bergabung
-                  </Button>
-                </div>
-              </div>
+              <JoinStoreForm userId={user.id} />
             </div>
           </div>
         </main>
