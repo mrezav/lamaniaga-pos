@@ -4,8 +4,8 @@ import { StoreForm } from "@/features/stores/components/StoreForm"
 import { Store, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { db } from "@/db"
-import { profiles } from "@/db/schema"
-import { eq } from "drizzle-orm"
+import { profiles, storeMembers } from "@/db/schema"
+import { eq, and } from "drizzle-orm"
 import { OnboardingHeader } from "@/components/shared/OnboardingHeader"
 
 export default async function CreateStorePage() {
@@ -16,12 +16,15 @@ export default async function CreateStorePage() {
     redirect("/login")
   }
 
-  // Page Guard: If user already has a store, redirect to dashboard
-  const userProfile = await db.query.profiles.findFirst({
-    where: eq(profiles.id, user.id)
+  // Page Guard: If user already owns a store, redirect to dashboard
+  const existingOwnership = await db.query.storeMembers.findFirst({
+    where: and(
+      eq(storeMembers.userId, user.id),
+      eq(storeMembers.role, "owner")
+    )
   })
 
-  if (userProfile?.storeId) {
+  if (existingOwnership) {
     redirect("/dashboard")
   }
 

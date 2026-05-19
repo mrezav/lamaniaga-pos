@@ -32,9 +32,27 @@ export const storeMembers = pgTable("store_members", {
     to: ["public"],
     using: sql`(auth.uid() = user_id)`
   }),
-  pgPolicy("Owners can manage their store members", {
+  pgPolicy("Owners can insert store members", {
     as: "permissive",
-    for: "all",
+    for: "insert",
+    to: ["public"],
+    withCheck: sql`exists (
+      select 1 from stores 
+      where stores.id = store_id and stores.owner_id = auth.uid()
+    )`
+  }),
+  pgPolicy("Owners can update store members", {
+    as: "permissive",
+    for: "update",
+    to: ["public"],
+    using: sql`exists (
+      select 1 from stores 
+      where stores.id = store_id and stores.owner_id = auth.uid()
+    )`
+  }),
+  pgPolicy("Owners can delete store members", {
+    as: "permissive",
+    for: "delete",
     to: ["public"],
     using: sql`exists (
       select 1 from stores 

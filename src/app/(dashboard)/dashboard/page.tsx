@@ -27,22 +27,21 @@ export default async function DashboardPage() {
     where: eq(stores.ownerId, user.id),
   })
 
-  // Query stores the user works at via the storeMembers table
-  const memberRelations = await db.query.storeMembers.findMany({
-    where: and(
-      eq(storeMembers.userId, user.id),
-      eq(storeMembers.status, "active")
-    ),
-  })
-
-  const memberStoreIds = memberRelations.map((mr) => mr.storeId)
-
-  let memberStores: typeof ownedStores = []
-  if (memberStoreIds.length > 0) {
-    memberStores = await db.query.stores.findMany({
-      where: inArray(stores.id, memberStoreIds),
+  // Query stores the user works at via the storeMembers table using a single JOIN query
+  const joinedStores = await db
+    .select({
+      store: stores,
     })
-  }
+    .from(stores)
+    .innerJoin(storeMembers, eq(stores.id, storeMembers.storeId))
+    .where(
+      and(
+        eq(storeMembers.userId, user.id),
+        eq(storeMembers.status, "active")
+      )
+    )
+
+  const memberStores = joinedStores.map((js) => js.store)
 
   // Combine them uniquely by store ID
   const storeMap = new Map<string, any>()
@@ -110,11 +109,11 @@ export default async function DashboardPage() {
   // --- SCENARIO B: Tepat 1 Toko (Auto-redirect langsung ke workspace toko) ---
   if (allStores.length === 1) {
     const singleStore = allStores[0]
-    // Self-healing: Sync profile storeId with this single store if out of sync
-    if (userProfile && userProfile.storeId !== singleStore.id) {
+    // Self-healing: Sync profile lastActiveStoreId with this single store if out of sync
+    if (userProfile && userProfile.lastActiveStoreId !== singleStore.id) {
       await db
         .update(profiles)
-        .set({ storeId: singleStore.id })
+        .set({ lastActiveStoreId: singleStore.id })
         .where(eq(profiles.id, user.id))
     }
     redirect(`/${singleStore.slug}`)

@@ -55,13 +55,13 @@ export default async function StoreLayout({ children, params }: StoreLayoutProps
     redirect("/dashboard")
   }
 
-  // Self-Healing Sync: Ensure active profile storeId (acts as lastActiveStoreId) matches the current tenant slug URL
-  if (userProfile.storeId !== store.id) {
+  // Self-Healing Sync: Ensure active profile lastActiveStoreId matches the current tenant slug URL
+  if (userProfile.lastActiveStoreId !== store.id) {
     await db
       .update(profiles)
-      .set({ storeId: store.id })
+      .set({ lastActiveStoreId: store.id })
       .where(eq(profiles.id, user.id))
-    userProfile.storeId = store.id
+    userProfile.lastActiveStoreId = store.id
   }
 
   return (
