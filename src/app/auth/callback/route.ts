@@ -21,7 +21,6 @@ export async function GET(request: Request) {
                 await db.insert(profiles).values({
                     id: data.user.id,
                     fullName: fullName,
-                    status: "idle",
                 }).onConflictDoNothing({ target: profiles.id }); // Mencegah error jika profil sudah ada
                 
                 return NextResponse.redirect(`${origin}${next}`)

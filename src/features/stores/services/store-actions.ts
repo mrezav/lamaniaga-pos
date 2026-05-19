@@ -1,8 +1,8 @@
 "use server"
 
 import { db } from "@/db"
-import { stores, profiles } from "@/db/schema"
-import { eq, sql } from "drizzle-orm"
+import { stores, profiles, storeMembers } from "@/db/schema"
+import { eq, sql, and } from "drizzle-orm"
 
 /**
  * Checks if a store slug already exists in the database.
@@ -60,12 +60,15 @@ interface CreateStoreInput {
 export async function createStoreTransaction(input: CreateStoreInput) {
   try {
     return await db.transaction(async (tx) => {
-      // 0. Check if user already has an active store
-      const userProfile = await tx.query.profiles.findFirst({
-        where: eq(profiles.id, input.ownerId),
+      // 0. Check if user already has an active store ownership
+      const existingOwnership = await tx.query.storeMembers.findFirst({
+        where: and(
+          eq(storeMembers.userId, input.ownerId),
+          eq(storeMembers.role, "owner")
+        ),
       })
-      if (userProfile?.storeId) {
-        throw new Error("Anda sudah terdaftar di suatu toko")
+      if (existingOwnership) {
+        throw new Error("Anda sudah memiliki sebuah toko")
       }
 
       // Set session variable 'request.jwt.claims' to simulate Supabase auth.uid()
@@ -99,11 +102,19 @@ export async function createStoreTransaction(input: CreateStoreInput) {
       await tx
         .update(profiles)
         .set({
+          lastActiveStoreId: newStore.id,
+        })
+        .where(eq(profiles.id, input.ownerId))
+
+      // 3. Create store member relationship
+      await tx
+        .insert(storeMembers)
+        .values({
+          userId: input.ownerId,
           storeId: newStore.id,
           role: "owner",
           status: "active",
         })
-        .where(eq(profiles.id, input.ownerId))
 
       return { data: newStore, error: null }
     })
@@ -120,7 +131,7 @@ export async function setActiveStoreAction(storeId: string, userId: string) {
   try {
     await db
       .update(profiles)
-      .set({ storeId })
+      .set({ lastActiveStoreId: storeId })
       .where(eq(profiles.id, userId))
     return { success: true }
   } catch (error: any) {

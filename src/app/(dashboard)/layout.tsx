@@ -27,7 +27,6 @@ export default async function DashboardLayout({
       await db.insert(profiles).values({
         id: user.id,
         fullName: fullName,
-        status: "idle",
       }).onConflictDoNothing({ target: profiles.id })
     }
   } catch (error) {
