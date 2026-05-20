@@ -3,13 +3,15 @@
 import { db } from "@/db"
 import { stores, storeMembers, profiles } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
+import { randomInt } from "node:crypto"
+import { createClient } from "@/lib/supabase/server"
 
 // Helper function to generate a secure random 9-digit alphanumeric code
 function generateRandomCode(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
   let result = ""
   for (let i = 0; i < 9; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
+    result += chars.charAt(randomInt(0, chars.length))
   }
   return result
 }
@@ -19,6 +21,21 @@ function generateRandomCode(): string {
  */
 export async function generateJoinCodeAction(storeId: string) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const store = await db.query.stores.findFirst({
+      where: eq(stores.id, storeId),
+    })
+
+    if (!store || store.ownerId !== user.id) {
+      return { success: false, error: "Anda tidak memiliki akses untuk aksi ini." }
+    }
+
     let joinCode = ""
     let isUnique = false
     let attempts = 0
@@ -56,6 +73,13 @@ export async function generateJoinCodeAction(storeId: string) {
  */
 export async function submitJoinCodeAction(joinCode: string, userId: string) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user || user.id !== userId) {
+      return { success: false, error: "Unauthorized" }
+    }
+
     const formattedCode = joinCode.trim().toUpperCase()
 
     // 1. Find store by join code
@@ -115,6 +139,21 @@ export async function submitJoinCodeAction(joinCode: string, userId: string) {
  */
 export async function getStoreMembersAction(storeId: string) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const store = await db.query.stores.findFirst({
+      where: eq(stores.id, storeId),
+    })
+
+    if (!store || store.ownerId !== user.id) {
+      return { success: false, error: "Anda tidak memiliki akses untuk aksi ini." }
+    }
+
     const members = await db
       .select({
         id: storeMembers.id,
@@ -141,6 +180,29 @@ export async function getStoreMembersAction(storeId: string) {
  */
 export async function updateMemberStatusAction(memberId: string, status: "active" | "rejected") {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const member = await db.query.storeMembers.findFirst({
+      where: eq(storeMembers.id, memberId),
+    })
+
+    if (!member) {
+      return { success: false, error: "Anggota tidak ditemukan." }
+    }
+
+    const store = await db.query.stores.findFirst({
+      where: eq(stores.id, member.storeId),
+    })
+
+    if (!store || store.ownerId !== user.id) {
+      return { success: false, error: "Anda tidak memiliki akses untuk aksi ini." }
+    }
+
     await db
       .update(storeMembers)
       .set({
