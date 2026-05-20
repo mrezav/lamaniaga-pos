@@ -29,8 +29,10 @@ interface StoreLayoutClientProps {
     slug: string
     logoUrl?: string | null
     joinCode?: string | null
+    ownerId: string
   }
   profile: {
+    id: string
     fullName: string
     avatarUrl?: string | null
   }
@@ -84,6 +86,15 @@ export function StoreLayoutClient({ children, store, profile }: StoreLayoutClien
       icon: FolderTree,
     },
   ]
+
+  const isOwner = store.ownerId === profile.id
+  if (isOwner) {
+    menuItems.push({
+      name: "Kode Toko",
+      href: `/${store.slug}/join-store`,
+      icon: QrCode,
+    })
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 font-sans w-full">
