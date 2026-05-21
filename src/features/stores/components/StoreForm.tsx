@@ -32,7 +32,6 @@ interface StoreFormProps {
 
 export function StoreForm({ userId }: StoreFormProps) {
     const router = useRouter();
-    const supabase = createClient();
     const { showToast } = useToastStore();
 
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -70,8 +69,23 @@ export function StoreForm({ userId }: StoreFormProps) {
             try {
                 const uniqueSlug = await generateUniqueSlug(nameValue);
                 setValue("slug", uniqueSlug, { shouldValidate: true });
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Gagal men-generate slug:", error);
+
+                const isUniqueViolation =
+                    error?.code === "23505" ||
+                    /duplicate key value violates unique constraint/i.test(
+                        error?.message ?? "",
+                    );
+
+                setValue("slug", "", { shouldValidate: true });
+                showToast(
+                    isUniqueViolation
+                        ? "Slug sudah digunakan. Silakan ubah nama toko."
+                        : error?.message ||
+                              "Terjadi kesalahan saat memproses data di server",
+                    "error",
+                );
             } finally {
                 setIsCheckingSlug(false);
             }
@@ -80,15 +94,15 @@ export function StoreForm({ userId }: StoreFormProps) {
         return () => clearTimeout(handler);
     }, [nameValue, setValue]);
 
-    // Mutation for uploading images and saving store data
+    // Mutation for uploading image files on client and sending URLs to server action
     const mutation = useMutation({
         mutationFn: async (values: CreateStoreSchemaType) => {
-            let logoUrl = "";
-            let bannerUrl = "";
+            const supabase = createClient();
             const uploadedPaths: string[] = [];
+            let logoUrl: string | undefined;
+            let bannerUrl: string | undefined;
 
             try {
-                // 1. Upload Logo if provided
                 if (values.logo instanceof File) {
                     const ext = values.logo.name.split(".").pop();
                     const path = `${values.slug}/logo-${Date.now()}.${ext}`;
@@ -110,7 +124,6 @@ export function StoreForm({ userId }: StoreFormProps) {
                     logoUrl = data.publicUrl;
                 }
 
-                // 2. Upload Banner if provided
                 if (values.banner instanceof File) {
                     const ext = values.banner.name.split(".").pop();
                     const path = `${values.slug}/banner-${Date.now()}.${ext}`;
@@ -132,15 +145,13 @@ export function StoreForm({ userId }: StoreFormProps) {
                     bannerUrl = data.publicUrl;
                 }
 
-                // 3. Insert Store & Update Profile
                 const result = await createStoreTransaction({
                     name: values.name,
                     slug: values.slug,
                     address: values.address || undefined,
                     phoneNumber: values.phoneNumber || undefined,
-                    logoUrl: logoUrl || undefined,
-                    bannerUrl: bannerUrl || undefined,
-                    ownerId: userId,
+                    logoUrl,
+                    bannerUrl,
                 });
 
                 if (result.error) {
@@ -149,9 +160,10 @@ export function StoreForm({ userId }: StoreFormProps) {
 
                 return result.data;
             } catch (err: any) {
-                // Rollback / clean up uploaded files if transaction failed
                 if (uploadedPaths.length > 0) {
-                    await supabase.storage.from("stores").remove(uploadedPaths);
+                    await supabase.storage
+                        .from("public-assets")
+                        .remove(uploadedPaths);
                 }
                 throw err;
             }

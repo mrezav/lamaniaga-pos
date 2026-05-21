@@ -3,7 +3,11 @@
 import { db } from "@/db";
 import { stores, profiles, storeMembers } from "@/db/schema";
 import { eq, sql, and } from "drizzle-orm";
-
+import { createClient } from "@/lib/supabase/server";
+import {
+    createStorePayloadSchema,
+    type CreateStorePayloadType,
+} from "../schemas/store-schema";
 /**
  * Checks if a store slug already exists in the database.
  */
@@ -44,50 +48,60 @@ export async function generateUniqueSlug(name: string): Promise<string> {
     return slug;
 }
 
-interface CreateStoreInput {
-    name: string;
-    slug: string;
-    address?: string;
-    phoneNumber?: string;
-    logoUrl?: string;
-    bannerUrl?: string;
-    ownerId: string;
-}
+type CreateStoreInput = CreateStorePayloadType;
 
 /**
  * Atomic transaction to create a store and upgrade the owner's profile role and status.
  */
 export async function createStoreTransaction(input: CreateStoreInput) {
+    const validation = createStorePayloadSchema.safeParse(input);
+
+    if (!validation.success) {
+        return {
+            data: null,
+            error: "Input tidak valid : " + validation.error.format(),
+        };
+    }
+    const validInput = validation.data;
+
     try {
+        const supabase = await createClient();
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) throw new Error("Unauthorized");
+        const ownerId = user.id;
+
+        // 0. Check if user already has an active store ownership
+        const existingOwnership = await db.query.storeMembers.findFirst({
+            where: and(
+                eq(storeMembers.userId, ownerId),
+                eq(storeMembers.role, "owner"),
+            ),
+        });
+        if (existingOwnership) {
+            throw new Error("Anda sudah memiliki sebuah toko");
+        }
+
         return await db.transaction(async (tx) => {
             // Set session variable 'request.jwt.claims' to simulate Supabase auth.uid()
-            const jwtClaims = JSON.stringify({ sub: input.ownerId });
+            const jwtClaims = JSON.stringify({ sub: ownerId });
             await tx.execute(
                 sql`SELECT set_config('request.jwt.claims', ${jwtClaims}, true)`,
             );
-
-            // 0. Check if user already has an active store ownership
-            const existingOwnership = await tx.query.storeMembers.findFirst({
-                where: and(
-                    eq(storeMembers.userId, input.ownerId),
-                    eq(storeMembers.role, "owner"),
-                ),
-            });
-            if (existingOwnership) {
-                throw new Error("Anda sudah memiliki sebuah toko");
-            }
 
             // 1. Insert store
             const [newStore] = await tx
                 .insert(stores)
                 .values({
-                    name: input.name,
-                    slug: input.slug,
-                    address: input.address || null,
-                    phoneNumber: input.phoneNumber || null,
-                    logoUrl: input.logoUrl || null,
-                    bannerUrl: input.bannerUrl || null,
-                    ownerId: input.ownerId,
+                    name: validInput.name,
+                    slug: validInput.slug,
+                    address: validInput.address || null,
+                    phoneNumber: validInput.phoneNumber || null,
+                    logoUrl: validInput.logoUrl || null,
+                    bannerUrl: validInput.bannerUrl || null,
+                    ownerId,
                 })
                 .returning({
                     id: stores.id,
@@ -104,11 +118,11 @@ export async function createStoreTransaction(input: CreateStoreInput) {
                 .set({
                     lastActiveStoreId: newStore.id,
                 })
-                .where(eq(profiles.id, input.ownerId));
+                .where(eq(profiles.id, ownerId));
 
             // 3. Create store member relationship
             await tx.insert(storeMembers).values({
-                userId: input.ownerId,
+                userId: ownerId,
                 storeId: newStore.id,
                 role: "owner",
                 status: "active",
@@ -118,11 +132,19 @@ export async function createStoreTransaction(input: CreateStoreInput) {
         });
     } catch (error: any) {
         console.error("Transaction failed in createStoreTransaction:", error);
+
+        const isUniqueViolation =
+            error?.code === "23505" ||
+            /duplicate key value violates unique constraint/i.test(
+                error?.message ?? "",
+            );
+
         return {
             data: null,
-            error:
-                error?.message ||
-                "Terjadi kesalahan saat memproses data di server",
+            error: isUniqueViolation
+                ? "Slug sudah digunakan. Silakan ubah nama toko."
+                : error?.message ||
+                  "Terjadi kesalahan saat memproses data di server",
         };
     }
 }
