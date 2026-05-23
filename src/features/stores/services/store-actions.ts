@@ -74,15 +74,15 @@ export async function createStoreTransaction(input: CreateStoreInput) {
         const ownerId = user.id;
 
         // 0. Check if user already has an active store ownership
-        const existingOwnership = await db.query.storeMembers.findFirst({
-            where: and(
-                eq(storeMembers.userId, ownerId),
-                eq(storeMembers.role, "owner"),
-            ),
-        });
-        if (existingOwnership) {
-            throw new Error("Anda sudah memiliki sebuah toko");
-        }
+        // const existingOwnership = await db.query.storeMembers.findFirst({
+        //     where: and(
+        //         eq(storeMembers.userId, ownerId),
+        //         eq(storeMembers.role, "owner"),
+        //     ),
+        // });
+        // if (existingOwnership) {
+        //     throw new Error("Anda sudah memiliki sebuah toko");
+        // }
 
         return await db.transaction(async (tx) => {
             // Set session variable 'request.jwt.claims' to simulate Supabase auth.uid()

@@ -170,10 +170,10 @@ export function StoreForm({ userId }: StoreFormProps) {
         },
         onSuccess: (data) => {
             showToast(
-                "Toko berhasil dibuat! Mengalihkan ke dashboard...",
+                "Toko berhasil dibuat! Mengalihkan ke dashboard toko...",
                 "success",
             );
-            router.push("/dashboard");
+            router.push(`/stores/${data?.slug}/dashboard`);
             router.refresh();
         },
         onError: (error: any) => {
@@ -413,7 +413,7 @@ export function StoreForm({ userId }: StoreFormProps) {
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={() => router.push("/dashboard")}
+                            onClick={() => router.push("/stores")}
                             disabled={isLoading}
                             className="flex-1 h-12 rounded-xl text-base font-semibold border-slate-200 hover:bg-slate-50 text-slate-600"
                         >
