@@ -30,7 +30,7 @@ export function StoreSelector({ stores, userId }: StoreSelectorProps) {
         setSelectedId(store.id);
 
         try {
-            const result = await setActiveStoreAction(store.id, userId);
+            const result = await setActiveStoreAction(store.id);
             if (!result.success) {
                 throw new Error(result.error);
             }
