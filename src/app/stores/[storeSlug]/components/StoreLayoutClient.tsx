@@ -81,16 +81,6 @@ export function StoreLayoutClient({
             href: `/stores/${store.slug}/dashboard`,
             icon: LayoutDashboard,
         },
-        {
-            name: "Product",
-            href: `/stores/${store.slug}/products`,
-            icon: Package,
-        },
-        {
-            name: "Category",
-            href: `/stores/${store.slug}/categories`,
-            icon: FolderTree,
-        },
     ];
 
     const isOwner = store.ownerId === profile.id;
@@ -159,7 +149,9 @@ export function StoreLayoutClient({
                     )}
 
                     {menuItems.map((item) => {
-                        const isActive = pathname === item.href;
+                        const isActive =
+                            pathname === item.href ||
+                            pathname.startsWith(`${item.href}/`);
                         return (
                             <Link
                                 key={item.href}
@@ -301,16 +293,6 @@ export function StoreLayoutClient({
                                                 {profile.fullName}
                                             </p>
                                         </div>
-                                        <Link
-                                            href={`/stores/${store.slug}/settings`}
-                                            onClick={() =>
-                                                setIsUserMenuOpen(false)
-                                            }
-                                            className="flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors font-semibold"
-                                        >
-                                            <Settings className="w-4 h-4 text-slate-400" />
-                                            Settings
-                                        </Link>
                                         <button
                                             onClick={() => {
                                                 setIsUserMenuOpen(false);

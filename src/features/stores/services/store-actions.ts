@@ -152,18 +152,58 @@ export async function createStoreTransaction(input: CreateStoreInput) {
 /**
  * Server Action to set the user's active storeId.
  */
-export async function setActiveStoreAction(storeId: string, userId: string) {
+/**
+ * Server Action to set the user's active storeId.
+ */
+export async function setActiveStoreAction(storeId: string) {
     try {
+        const supabase = await createClient();
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const store = await db.query.stores.findFirst({
+            where: eq(stores.id, storeId),
+        });
+
+        if (!store) {
+            return { success: false, error: "Toko tidak ditemukan" };
+        }
+
+        const memberRecord = await db.query.storeMembers.findFirst({
+            where: and(
+                eq(storeMembers.storeId, storeId),
+                eq(storeMembers.userId, user.id),
+                eq(storeMembers.status, "active"),
+            ),
+        });
+
+        const isOwner = store.ownerId === user.id;
+        const isStaff = !!memberRecord;
+
+        if (!isOwner && !isStaff) {
+            return {
+                success: false,
+                error: "Anda bukan anggota toko ini",
+            };
+        }
+
         await db
             .update(profiles)
             .set({ lastActiveStoreId: storeId })
-            .where(eq(profiles.id, userId));
+            .where(eq(profiles.id, user.id));
+
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message =
+            error instanceof Error
+                ? error.message
+                : "Gagal mengubah toko aktif";
         console.error("Failed to setActiveStoreAction:", error);
-        return {
-            success: false,
-            error: error?.message || "Gagal mengubah toko aktif",
-        };
+        return { success: false, error: message };
     }
 }
