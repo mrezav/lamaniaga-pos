@@ -4,11 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useToastStore } from "@/store/useToastStore";
+import { useToastStore } from "@/state/useToastStore";
 import {
     LayoutDashboard,
-    Package,
-    FolderTree,
+    Boxes,
     QrCode,
     Bell,
     ChevronLeft,
@@ -19,6 +18,7 @@ import {
     User,
     Copy,
     Check,
+    LayoutGrid,
 } from "lucide-react";
 
 interface StoreLayoutClientProps {
@@ -81,16 +81,30 @@ export function StoreLayoutClient({
             href: `/stores/${store.slug}/dashboard`,
             icon: LayoutDashboard,
         },
+        {
+            name: "Kategori",
+            href: `/stores/${store.slug}/categories`,
+            icon: Boxes,
+        },
     ];
 
     const isOwner = store.ownerId === profile.id;
     if (isOwner) {
         menuItems.push({
             name: "Kode Toko",
-            href: `/stores/${store.slug}/join-store`,
+            href: `/stores/${store.slug}/store-code`,
             icon: QrCode,
         });
     }
+
+    const routeLabels: Record<string, string> = {
+        dashboard: "Ringkasan Toko",
+        categories: "Kategori",
+        products: "Produk",
+        "store-code": "Kode Toko",
+    };
+    const currentPage = pathname.split("/").pop() || "";
+    const title = routeLabels[currentPage] || currentPage;
 
     return (
         <div className="flex h-screen overflow-hidden bg-slate-50 font-sans w-full">
@@ -233,9 +247,7 @@ export function StoreLayoutClient({
                 <header className="flex items-center justify-between h-20 px-8 bg-white border-b border-slate-200 shrink-0">
                     <div>
                         <h2 className="text-lg font-bold text-slate-800 capitalize tracking-tight">
-                            {pathname === `/stores/${store.slug}/dashboard`
-                                ? "Ringkasan Toko"
-                                : pathname.split("/").pop()}
+                            {title}
                         </h2>
                     </div>
 
@@ -272,7 +284,7 @@ export function StoreLayoutClient({
                                         <User className="w-4 h-4" />
                                     )}
                                 </div>
-                                <span className="hidden sm:inline font-bold text-sm text-slate-700 max-w-[120px] truncate">
+                                <span className="hidden sm:inline font-bold text-sm text-slate-700 max-w-120px truncate">
                                     {profile.fullName}
                                 </span>
                             </button>

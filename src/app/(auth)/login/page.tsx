@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { useLogin } from "@/features/auth/hooks/use-login";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -13,7 +13,7 @@ export default function LoginPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const supabase = createClient();
+    const loginMutation = useLogin();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -21,19 +21,18 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+            // const result = await login({ email, password });
+            const result = await loginMutation.mutateAsync({ email, password });
 
-            if (error) {
-                setError("Email atau password salah");
-            } else {
-                router.push("/stores");
-                router.refresh();
+            if (!result.success) {
+                setError(result.message ?? "login gagal");
             }
+
+            router.push("/stores");
+            router.refresh();
         } catch (err) {
-            setError("Gagal menghubungi server");
+            setError("Terjadi gangunan internal");
+            console.error(err);
         } finally {
             setLoading(false);
         }

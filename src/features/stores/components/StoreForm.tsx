@@ -10,7 +10,7 @@ import {
     generateUniqueSlug,
     createStoreTransaction,
 } from "../services/store-actions";
-import { useToastStore } from "@/store/useToastStore";
+import { useToastStore } from "@/state/useToastStore";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -69,20 +69,22 @@ export function StoreForm({ userId }: StoreFormProps) {
             try {
                 const uniqueSlug = await generateUniqueSlug(nameValue);
                 setValue("slug", uniqueSlug, { shouldValidate: true });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error("Gagal men-generate slug:", error);
 
+                const e = error as { code?: string; message?: string };
+
                 const isUniqueViolation =
-                    error?.code === "23505" ||
+                    e?.code === "23505" ||
                     /duplicate key value violates unique constraint/i.test(
-                        error?.message ?? "",
+                        e?.message ?? "",
                     );
 
                 setValue("slug", "", { shouldValidate: true });
                 showToast(
                     isUniqueViolation
                         ? "Slug sudah digunakan. Silakan ubah nama toko."
-                        : error?.message ||
+                        : e?.message ||
                               "Terjadi kesalahan saat memproses data di server",
                     "error",
                 );
@@ -159,7 +161,7 @@ export function StoreForm({ userId }: StoreFormProps) {
                 }
 
                 return result.data;
-            } catch (err: any) {
+            } catch (err: unknown) {
                 if (uploadedPaths.length > 0) {
                     await supabase.storage
                         .from("public-assets")
@@ -176,9 +178,10 @@ export function StoreForm({ userId }: StoreFormProps) {
             router.push(`/stores/${data?.slug}/dashboard`);
             router.refresh();
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
+            const e = error as Error | { message?: string };
             showToast(
-                error.message || "Gagal membuat toko. Silakan coba kembali.",
+                e?.message || "Gagal membuat toko. Silakan coba kembali.",
                 "error",
             );
         },

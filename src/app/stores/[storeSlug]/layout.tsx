@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { profiles, stores, storeMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { StoreLayoutClient } from "./components/StoreLayoutClient";
+import { StoreLayoutClient } from "@/features/stores/components";
 
 interface StoreLayoutProps {
     children: React.ReactNode;

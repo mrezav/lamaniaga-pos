@@ -3,17 +3,19 @@ import { db } from "@/db";
 import { stores } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { StoreCodeManager } from "@/features/stores/components/StoreCodeManager";
-import { StoreMembersTable } from "@/features/stores/components/StoreMembersTable";
 import { QrCode } from "lucide-react";
+import {
+    StoreCodeManager,
+    StoreMembersTable,
+} from "@/features/stores/components";
 
-interface JoinStorePageProps {
+interface StoreCodePageProps {
     params: Promise<{
         storeSlug: string;
     }>;
 }
 
-export default async function JoinStorePage({ params }: JoinStorePageProps) {
+export default async function StoreCodePage({ params }: StoreCodePageProps) {
     const { storeSlug } = await params;
     const supabase = await createClient();
     const {

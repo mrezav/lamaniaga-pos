@@ -1,11 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { StoreForm } from "@/features/stores/components/StoreForm";
+import { StoreForm } from "@/features/stores/components";
 import { Store, ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { db } from "@/db";
-import { storeMembers } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
 import { OnboardingHeader } from "@/components/shared/OnboardingHeader";
 
 export default async function CreateStorePage() {
