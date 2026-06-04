@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { setActiveStoreAction } from "@/features/stores/services/store-actions";
-import { useToastStore } from "@/store/useToastStore";
-import { Store, PlusCircle, ArrowRight, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { useToastStore } from "@/state/useToastStore";
+import { Store, ArrowRight, Loader2 } from "lucide-react";
 
 interface StoreData {
     id: string;

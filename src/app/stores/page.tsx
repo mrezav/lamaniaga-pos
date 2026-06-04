@@ -7,11 +7,9 @@ import { profiles, stores, storeMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { OnboardingHeader } from "@/components/shared/OnboardingHeader";
-import { StoreSelector } from "./components/StoreSelector";
+import { StoreSelector, JoinStoreForm } from "@/features/stores/components";
 
-import { JoinStoreForm } from "@/features/stores/components/JoinStoreForm";
-
-export default async function DashboardPage() {
+export default async function OnboardingPage() {
     const supabase = await createClient();
     const {
         data: { user },
