@@ -1,18 +1,21 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createCategory } from "../services/category-actions";
-import { CategoryFormValues } from "../schemas/category-schema";
+import { CreateCategoryInput } from "../schemas/category-schema";
+import { createCategoryAction } from "../actions";
 
-export const useCreateCategoryMutation = (storeSlug: string) => {
+export const useCategoryMutations = (storeSlug: string) => {
     const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: async (values: CategoryFormValues) => {
+    const createMutation = useMutation({
+        mutationFn: async (values: CreateCategoryInput) => {
             // 1. Panggil Server Action
-            const response = await createCategory(storeSlug, values);
+            const response = await createCategoryAction(storeSlug, values);
 
             // 2. Jika Server Action mengembalikan success: false (gagal di guard/validasi)
             // Kita lemparkan sebagai error agar TanStack Query tahu ini adalah kegagalan
             if (!response.success) {
+                if (typeof response.error === "object") {
+                    throw new Error("Validasi input gagal.");
+                }
                 throw new Error(response.message || "Gagal membuat kategori.");
             }
 
@@ -26,4 +29,10 @@ export const useCreateCategoryMutation = (storeSlug: string) => {
             });
         },
     });
+
+    return {
+        createCategory: createMutation.mutateAsync,
+        isCreating: createMutation.isPending,
+        error: createMutation.error,
+    };
 };

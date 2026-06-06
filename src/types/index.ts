@@ -1,5 +1,11 @@
-export type ActionResponse<T = undefined> = {
-    success: boolean;
-    message?: string;
-    data?: T;
-};
+export type ActionResponse<T> =
+    | {
+          success: true;
+          data: T;
+          message?: string;
+      }
+    | {
+          success: false;
+          data?: never;
+          message: string;
+      };
