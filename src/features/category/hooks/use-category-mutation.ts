@@ -1,38 +1,69 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { CreateCategoryInput } from "../schemas/category-schema";
 import { createCategoryAction } from "../actions";
+import { CategoryInput } from "../schemas/category-schema";
+import { updateCategoryAction } from "../actions/update-category";
 
-export const useCategoryMutations = (storeSlug: string) => {
+export const useCategoryMutations = (
+    storeSlug: string,
+    categoryId?: string,
+) => {
     const queryClient = useQueryClient();
 
     const createMutation = useMutation({
-        mutationFn: async (values: CreateCategoryInput) => {
+        mutationFn: async (values: CategoryInput) => {
             // 1. Panggil Server Action
             const response = await createCategoryAction(storeSlug, values);
 
-            // 2. Jika Server Action mengembalikan success: false (gagal di guard/validasi)
-            // Kita lemparkan sebagai error agar TanStack Query tahu ini adalah kegagalan
-            if (!response.success) {
-                if (typeof response.error === "object") {
-                    throw new Error("Validasi input gagal.");
-                }
-                throw new Error(response.message || "Gagal membuat kategori.");
+            // 2. Jika gagal karena Permission/Sistem (ada properti message)
+            if (!response.success && response.message) {
+                throw new Error(response.message);
             }
 
-            // 3. Jika sukses sejati, kembalikan data responnya
+            // Kembalikan response apa adanya agar validationErrors bisa dibaca di form
             return response;
         },
-        onSuccess: () => {
+        onSuccess: (res) => {
             // Auto invalidasi cache agar data di tabel ter-refresh
-            queryClient.invalidateQueries({
-                queryKey: ["categories", storeSlug],
-            });
+            if (res.success) {
+                queryClient.invalidateQueries({
+                    queryKey: ["categories", storeSlug],
+                });
+            }
+        },
+    });
+
+    const updateMutation = useMutation({
+        mutationFn: async (values: CategoryInput) => {
+            if (!categoryId)
+                throw new Error("Category ID dibutuhkan untuk pembaruan data.");
+            const response = await updateCategoryAction(
+                categoryId,
+                storeSlug,
+                values,
+            );
+            if (!response.success && response.message) {
+                throw new Error(response.message);
+            }
+            return response;
+        },
+        onSuccess: (res) => {
+            if (res.success) {
+                // Invalidasi cache daftar kategori
+                queryClient.invalidateQueries({
+                    queryKey: ["categories", storeSlug],
+                });
+                // Invalidasi cache untuk data kategori spesifik ini berdasarkan ID-nya
+                queryClient.invalidateQueries({
+                    queryKey: ["category", storeSlug, categoryId],
+                });
+            }
         },
     });
 
     return {
         createCategory: createMutation.mutateAsync,
         isCreating: createMutation.isPending,
-        error: createMutation.error,
+        updateCategory: updateMutation.mutateAsync,
+        isUpdating: updateMutation.isPending,
     };
 };

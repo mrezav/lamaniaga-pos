@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { categories } from "@/db/schema";
-import { and, asc, count, desc, eq, ilike, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike } from "drizzle-orm";
 
 interface getCategoriesParams {
     storeId: string;
@@ -11,7 +11,7 @@ interface getCategoriesParams {
     sortOrder?: "asc" | "desc";
 }
 
-export async function getCategoriesByStoreId({
+export async function findCategoriesByStoreId({
     storeId,
     search = "",
     page = 1,

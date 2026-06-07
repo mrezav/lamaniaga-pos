@@ -1,1 +1,1 @@
-export * from "./get-store-by-slug";
+export * from "./find-by-slug";

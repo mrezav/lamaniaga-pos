@@ -20,8 +20,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Loader2, ChevronLeft, ChevronRight, Search, Plus } from "lucide-react";
+import {
+    Loader2,
+    ChevronLeft,
+    ChevronRight,
+    Search,
+    Plus,
+    Edit2,
+} from "lucide-react";
 import Link from "next/link";
+
 export function CategoryTable({ storeSlug }: { storeSlug: string }) {
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
@@ -113,6 +121,7 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
                                 <TableHead>Nama Kategori</TableHead>
                                 <TableHead>Slug</TableHead>
                                 <TableHead>Deskripsi</TableHead>
+                                <TableHead>Aksi</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -136,6 +145,21 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
                                         </TableCell>
                                         <TableCell className="text-muted-foreground">
                                             {cat.description || "-"}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button
+                                                asChild
+                                                variant="ghost"
+                                                size="sm"
+                                                className="rounded-lg text-slate-600"
+                                            >
+                                                <Link
+                                                    href={`/stores/${storeSlug}/categories/${cat.id}/edit`}
+                                                >
+                                                    <Edit2 className="h-4 w-4 mr-2" />
+                                                    Edit
+                                                </Link>
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
                                 ))

@@ -1,8 +1,8 @@
 "use server";
 
-import { getCategoriesByStoreId } from "../repositories";
+import { getStoreContext } from "@/lib/action-guards";
+import { findCategoriesByStoreId } from "../repositories";
 import { checkPermission } from "@/lib/permission";
-import { getStoreBySlug } from "@/features/stores/repositories";
 
 interface getCategoriesParams {
     storeSlug: string;
@@ -15,16 +15,11 @@ interface getCategoriesParams {
 
 export async function getCategoriesAction(payload: getCategoriesParams) {
     try {
-        const store = await getStoreBySlug(payload.storeSlug);
-        if (!store) {
-            return {
-                success: false,
-                data: null,
-                error: "Toko tidak ditemukan.",
-            };
-        }
+        const store = await getStoreContext(payload.storeSlug);
+
         await checkPermission(store.id, "category", "view");
-        const result = await getCategoriesByStoreId({
+
+        const result = await findCategoriesByStoreId({
             storeId: store.id,
             ...payload,
         });

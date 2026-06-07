@@ -4,6 +4,7 @@ import { profiles, stores, storeMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { StoreLayoutClient } from "@/features/stores/components";
+import { Toaster } from "sonner";
 
 interface StoreLayoutProps {
     children: React.ReactNode;
@@ -71,6 +72,7 @@ export default async function StoreLayout({
 
     return (
         <StoreLayoutClient store={store} profile={userProfile}>
+            <Toaster position="top-right" richColors />
             {children}
         </StoreLayoutClient>
     );

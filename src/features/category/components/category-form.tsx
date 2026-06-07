@@ -1,71 +1,149 @@
 "use client";
 
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toSlug } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input"; // Tetap pakai ini untuk style border input, bukan wrapper form
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { useCategoryMutations } from "../hooks/use-category-mutation";
-import {
-    createCategorySchema,
-    CreateCategoryInput,
-} from "../schemas/category-schema";
+
+import { toast } from "sonner";
+import { CategoryInput, categorySchema } from "../schemas/category-schema";
+import { Category } from "../types";
+import { useEffect } from "react";
 
 interface CategoryFormProps {
     storeSlug: string;
+    categoryId?: string;
+    initialData?: Category;
+    serverError?: string;
 }
 
-export function CategoryForm({ storeSlug }: CategoryFormProps) {
+export function CategoryForm({
+    categoryId,
+    storeSlug,
+    initialData,
+    serverError,
+}: CategoryFormProps) {
     const router = useRouter();
-    const { createCategory, isCreating } = useCategoryMutations(storeSlug);
+    const { createCategory, isCreating, updateCategory, isUpdating } =
+        useCategoryMutations(storeSlug, categoryId);
+    const isEditMode = !!categoryId;
+    const isSubmitting = isCreating || isUpdating;
 
-    // Inisialisasi React Hook Form standar dengan validasi Zod
     const {
         register,
         handleSubmit,
-        watch,
-        setValue,
+        reset,
+        setError,
         formState: { errors },
-    } = useForm<CreateCategoryInput>({
-        resolver: zodResolver(createCategorySchema),
+    } = useForm<CategoryInput>({
+        resolver: zodResolver(categorySchema),
         defaultValues: {
-            name: "",
-            slug: "",
-            description: "",
+            name: initialData?.name ?? "",
+            description: initialData?.description ?? "",
         },
     });
 
-    // Otomatis mengawasi input 'name' untuk mengubah nilai 'slug'
-    const watchName = watch("name");
-
     useEffect(() => {
-        if (watchName) {
-            setValue("slug", toSlug(watchName), { shouldValidate: true });
-        } else {
-            setValue("slug", "");
+        if (initialData) {
+            reset({
+                name: initialData.name,
+                description: initialData.description ?? "",
+            });
         }
-    }, [watchName, setValue]);
+    }, [initialData, reset]);
+
+    // =========================================================================
+    // KONDISI A: JIKA TERJADI ERROR DI SERVER (Permission Denied / DB Error)
+    // =========================================================================
+    if (serverError) {
+        return (
+            <div className="w-full p-5 border border-red-200 bg-red-50/50 rounded-2xl space-y-4 shadow-xs">
+                <div className="flex items-center gap-2.5 text-red-800 font-semibold text-sm">
+                    <div className="p-1.5 bg-red-100 rounded-lg text-red-600">
+                        <AlertCircle className="h-4 w-4"></AlertCircle>
+                    </div>
+                    Akses Ditolak / Gagal Memuat Data
+                </div>
+                <p className="text-xs text-red-600 font-medium leading-relaxed bg-white border border-red-100 p-3 rounded-xl">
+                    {serverError}
+                </p>
+                <div className="flex gap-2 pt-2 border-t border-red-100/60">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-xl h-10 px-4 border-slate-200 text-slate-600 hover:bg-slate-50"
+                        onClick={() =>
+                            router.push(`/stores/${storeSlug}/categories`)
+                        }
+                    >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Kembali ke List Kategori
+                    </Button>
+                </div>
+            </div>
+        );
+    }
 
     // Handler eksekusi submit data
-    async function onSubmit(values: CreateCategoryInput) {
+    async function onSubmit(values: CategoryInput) {
         try {
-            await createCategory(values);
+            let response;
+            if (isEditMode && categoryId) {
+                response = await updateCategory(values);
+            } else {
+                response = await createCategory(values);
+            }
+
+            // JIKA SERVER MENOLAK KARENA VALIDASI AMAN BERLAPIS GAGAL:
+            if (response && !response.success && response.validationErrors) {
+                // Lakukan perulangan untuk setiap field error yang dikirim oleh server
+                Object.entries(response.validationErrors).forEach(
+                    ([field, messages]) => {
+                        if (messages && messages.length > 0) {
+                            setError(field as keyof CategoryInput, {
+                                type: "server", // Menandakan ini error kiriman dari server
+                                message: messages[0], // Ambil baris pesan error pertama kustom Anda
+                            });
+                        }
+                    },
+                );
+
+                toast.error("Validasi Gagal", {
+                    description: "Silahkan periksa kembali input anda",
+                });
+                return;
+            }
+
+            toast.success(
+                isEditMode
+                    ? "Berhasil memperbarui kategori"
+                    : "Berhasil membuat kategori",
+            );
             router.push(`/stores/${storeSlug}/categories`);
         } catch (err) {
-            console.error("Gagal menyimpan kategori:", err);
+            const message =
+                err instanceof Error ? err.message : "Terjadi masalah internal";
+            toast.error("Gagal Menyimpan", {
+                description: message,
+                duration: 3000,
+            });
+            console.error(err);
         }
     }
 
+    // =========================================================================
+    // KONDISI B: ALUR NORMAL (Jika Server Berhasil Mengambil Data)
+    // =========================================================================
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}
             className="w-full space-y-6" // Hapus border internal dan buat w-full
         >
             {/* GRID LAYOUT UNTUK INPUT */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
                 {/* KIRI: INPUT NAMA */}
                 <div className="flex flex-col space-y-2">
                     <label
@@ -84,28 +162,6 @@ export function CategoryForm({ storeSlug }: CategoryFormProps) {
                     {errors.name && (
                         <p className="text-xs font-medium text-red-500 mt-1">
                             {errors.name.message}
-                        </p>
-                    )}
-                </div>
-
-                {/* KANAN: INPUT SLUG (READONLY) */}
-                <div className="flex flex-col space-y-2">
-                    <label
-                        htmlFor="slug"
-                        className="text-sm font-semibold text-slate-400"
-                    >
-                        Slug (Otomatis)
-                    </label>
-                    <Input
-                        id="slug"
-                        placeholder="Otomatis terisi..."
-                        className="h-11 rounded-xl bg-slate-100 border-slate-200/60 font-mono text-xs text-slate-500 cursor-not-allowed"
-                        disabled
-                        {...register("slug")}
-                    />
-                    {errors.slug && (
-                        <p className="text-xs font-medium text-red-500 mt-1">
-                            {errors.slug.message}
                         </p>
                     )}
                 </div>
@@ -152,13 +208,17 @@ export function CategoryForm({ storeSlug }: CategoryFormProps) {
                 </Button>
                 <Button
                     type="submit"
-                    disabled={isCreating}
+                    disabled={isSubmitting}
                     className="rounded-xl h-11 px-6 bg-slate-900 hover:bg-slate-800 text-white font-medium transition-all shadow-sm"
                 >
-                    {isCreating && (
+                    {isSubmitting && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    Simpan Kategori
+                    {isSubmitting
+                        ? "Menyimpan..."
+                        : isEditMode
+                          ? "Perbarui"
+                          : "Simpan"}
                 </Button>
             </div>
         </form>

@@ -1,10 +1,10 @@
 "use server";
-import { ActionResponse } from "@/types";
+
 import { signUpParams } from "../types/auth";
 import { registerSchema } from "../schema/auth";
 import { signUp } from "../repositories";
 
-export async function register(input: signUpParams): Promise<ActionResponse> {
+export async function register(input: signUpParams) {
     const validated = registerSchema.safeParse(input);
     if (!validated.success) {
         return {

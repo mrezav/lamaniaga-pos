@@ -1,9 +1,9 @@
 "use server";
-import { ActionResponse } from "@/types";
+
 import { signIn } from "@/features/auth/repositories";
 import { loginSchema } from "@/features/auth/schema/auth";
 
-export async function login(input: unknown): Promise<ActionResponse> {
+export async function login(input: unknown) {
     const validated = loginSchema.safeParse(input);
 
     if (!validated.success) {
