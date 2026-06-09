@@ -1,29 +1,89 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createCategory } from "../services/category-actions";
-import { CategoryFormValues } from "../schemas/category-schema";
-
-export const useCreateCategoryMutation = (storeSlug: string) => {
+import { CategoryInput } from "../schemas/category-schema";
+import { updateCategoryAction } from "../actions/update-category";
+import { createCategoryAction } from "../actions/create-category";
+import { deleteCategoryAction } from "../actions";
+export const useCategoryMutations = (
+    storeSlug: string,
+    categoryId?: string,
+) => {
     const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: async (values: CategoryFormValues) => {
+    const createMutation = useMutation({
+        mutationFn: async (values: CategoryInput) => {
             // 1. Panggil Server Action
-            const response = await createCategory(storeSlug, values);
+            const response = await createCategoryAction(storeSlug, values);
 
-            // 2. Jika Server Action mengembalikan success: false (gagal di guard/validasi)
-            // Kita lemparkan sebagai error agar TanStack Query tahu ini adalah kegagalan
-            if (!response.success) {
-                throw new Error(response.message || "Gagal membuat kategori.");
+            // 2. Jika gagal karena Permission/Sistem (ada properti message)
+            if (!response.success && response.error) {
+                throw new Error(response.error);
             }
 
-            // 3. Jika sukses sejati, kembalikan data responnya
+            // Kembalikan response apa adanya agar validationErrors bisa dibaca di form
+            return response;
+        },
+        onSuccess: (res) => {
+            // Auto invalidasi cache agar data di tabel ter-refresh
+            if (res.success) {
+                queryClient.invalidateQueries({
+                    queryKey: ["categories", storeSlug],
+                });
+            }
+        },
+    });
+
+    const updateMutation = useMutation({
+        mutationFn: async (values: CategoryInput) => {
+            if (!categoryId)
+                throw new Error("Category ID dibutuhkan untuk pembaruan data.");
+            const response = await updateCategoryAction(
+                categoryId,
+                storeSlug,
+                values,
+            );
+            if (!response.success && response.error) {
+                throw new Error(response.error);
+            }
+            return response;
+        },
+        onSuccess: (res) => {
+            if (res.success) {
+                // Invalidasi cache daftar kategori
+                queryClient.invalidateQueries({
+                    queryKey: ["categories", storeSlug],
+                });
+                // Invalidasi cache untuk data kategori spesifik ini berdasarkan ID-nya
+                queryClient.invalidateQueries({
+                    queryKey: ["category", storeSlug, categoryId],
+                });
+            }
+        },
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: async (id: string) => {
+            if (!id)
+                throw new Error("Category ID dibutuhkan untuk pembaruan data.");
+            const response = await deleteCategoryAction(id, storeSlug);
+            if (!response.success && response.error) {
+                throw new Error(response.error);
+            }
             return response;
         },
         onSuccess: () => {
-            // Auto invalidasi cache agar data di tabel ter-refresh
+            // Invalidasi cache daftar kategori
             queryClient.invalidateQueries({
                 queryKey: ["categories", storeSlug],
             });
         },
     });
+
+    return {
+        createCategory: createMutation.mutateAsync,
+        isCreating: createMutation.isPending,
+        updateCategory: updateMutation.mutateAsync,
+        isUpdating: updateMutation.isPending,
+        deleteCategory: deleteMutation.mutateAsync,
+        isDeleting: deleteMutation.isPending,
+    };
 };

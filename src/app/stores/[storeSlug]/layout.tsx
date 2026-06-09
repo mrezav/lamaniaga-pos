@@ -4,6 +4,9 @@ import { profiles, stores, storeMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { StoreLayoutClient } from "@/features/stores/components";
+import { Toaster } from "sonner";
+import { getStoreBySlug } from "@/lib/store";
+import { getVerifiedMember } from "@/features/auth/repositories";
 
 interface StoreLayoutProps {
     children: React.ReactNode;
@@ -34,9 +37,7 @@ export default async function StoreLayout({
     }
 
     // Fetch the current store by slug
-    const store = await db.query.stores.findFirst({
-        where: eq(stores.slug, storeSlug),
-    });
+    const store = await getStoreBySlug(storeSlug);
 
     if (!store) {
         redirect("/stores");
@@ -52,11 +53,11 @@ export default async function StoreLayout({
     });
 
     // Multi-Tenant Security Authorization Guard
-    const isOwner = store.ownerId === user.id;
-    const isStaff = !!memberRecord;
-    const isAllowed = isOwner || isStaff;
+    // const isOwner = store.ownerId === user.id;
+    // const isStaff = !!memberRecord;
+    // const isAllowed = isOwner || isStaff;
 
-    if (!isAllowed) {
+    if (!memberRecord) {
         redirect("/stores");
     }
 
@@ -69,8 +70,18 @@ export default async function StoreLayout({
         userProfile.lastActiveStoreId = store.id;
     }
 
+    const storeMember = await getVerifiedMember(store.id, user.id);
+    if (!storeMember) {
+        redirect("/stores");
+    }
+
     return (
-        <StoreLayoutClient store={store} profile={userProfile}>
+        <StoreLayoutClient
+            store={store}
+            profile={userProfile}
+            storeMember={storeMember}
+        >
+            <Toaster position="top-right" richColors />
             {children}
         </StoreLayoutClient>
     );

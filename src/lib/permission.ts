@@ -1,8 +1,8 @@
 import { createClient } from "./supabase/server";
 import { getVerifiedMember } from "@/features/auth/repositories";
-import { hasPermission, Role } from "@/features/auth/types/permission";
+import { hasPermission, Role } from "@/features/auth/types/permission-rule";
 
-export async function guard(
+export async function checkPermission(
     storeId: string,
     resource: "category",
     action: "create" | "edit" | "view" | "delete",

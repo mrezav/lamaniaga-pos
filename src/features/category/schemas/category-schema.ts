@@ -2,8 +2,11 @@ import z from "zod";
 
 export const categorySchema = z.object({
     name: z.string().min(2, "Nama kategori minimal 2 karakter"),
-    // slug: z.string().min(2, "Slug minimal 2 karakter"),
-    description: z.string().optional(),
+    description: z
+        .string()
+        .max(255, "Deskripsi maksimal 255 karakter")
+        .optional()
+        .nullable(),
 });
 
-export type CategoryFormValues = z.infer<typeof categorySchema>;
+export type CategoryInput = z.infer<typeof categorySchema>;
