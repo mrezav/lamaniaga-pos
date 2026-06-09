@@ -1,7 +1,12 @@
 import { findBySlug } from "@/features/stores/repositories";
 import { cache } from "react";
 
-export const getStoreContext = cache(async (storeSlug: string) => {
+/**
+ * Mengambil data toko berdasarkan slug dengan optimasi Request Memoization.
+ * Aman dipanggil berulang kali di berbagai Server Components/Actions
+ * dalam satu siklus request tanpa menduplikasi query ke database.
+ */
+export const getStoreBySlug = cache(async (storeSlug: string) => {
     if (!storeSlug) {
         throw new Error("Slug toko tidak valid atau kosong");
     }

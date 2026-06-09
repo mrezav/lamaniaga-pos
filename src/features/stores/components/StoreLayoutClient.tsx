@@ -20,28 +20,21 @@ import {
     Check,
     LayoutGrid,
 } from "lucide-react";
+import { getVerifiedMember } from "@/features/auth/repositories";
+import { ProfileRow, StoreMemberRow, StoreRow } from "@/db/schema";
 
 interface StoreLayoutClientProps {
     children: React.ReactNode;
-    store: {
-        id: string;
-        name: string;
-        slug: string;
-        logoUrl?: string | null;
-        joinCode?: string | null;
-        ownerId: string;
-    };
-    profile: {
-        id: string;
-        fullName: string;
-        avatarUrl?: string | null;
-    };
+    store: StoreRow;
+    profile: ProfileRow;
+    storeMember: StoreMemberRow;
 }
 
 export function StoreLayoutClient({
     children,
     store,
     profile,
+    storeMember,
 }: StoreLayoutClientProps) {
     const pathname = usePathname();
     const router = useRouter();
@@ -88,8 +81,7 @@ export function StoreLayoutClient({
         },
     ];
 
-    const isOwner = store.ownerId === profile.id;
-    if (isOwner) {
+    if (storeMember && storeMember?.role == "owner") {
         menuItems.push({
             name: "Kode Toko",
             href: `/stores/${store.slug}/store-code`,

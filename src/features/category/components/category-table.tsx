@@ -27,13 +27,24 @@ import {
     Search,
     Plus,
     Edit2,
+    Delete,
+    Trash2,
 } from "lucide-react";
 import Link from "next/link";
+import { useCategoryMutations } from "../hooks/use-category-mutation";
 
 export function CategoryTable({ storeSlug }: { storeSlug: string }) {
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
     const [sort, setSort] = useState("createdAt-desc");
+    const { deleteCategory, isDeleting } = useCategoryMutations(storeSlug);
+
+    async function handleDelete(id: string) {
+        const isConfimed = confirm(`Apakah anda yakin?`);
+        if (isConfimed) {
+            await deleteCategory(id);
+        }
+    }
 
     // Debounce pencarian agar tidak membebani database
     const debouncedSearch = useDebounce(search, 400);
@@ -159,6 +170,27 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
                                                     <Edit2 className="h-4 w-4 mr-2" />
                                                     Edit
                                                 </Link>
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="rounded-lg text-slate-600"
+                                                disabled={isDeleting}
+                                                onClick={() =>
+                                                    handleDelete(cat.id)
+                                                }
+                                            >
+                                                {isDeleting ? (
+                                                    <>
+                                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                        Deleting...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Trash2 className="h-4 w-4 mr-2" />
+                                                        Delete
+                                                    </>
+                                                )}
                                             </Button>
                                         </TableCell>
                                     </TableRow>

@@ -1,20 +1,26 @@
 "use server";
 
-import { getStoreContext } from "@/lib/action-guards";
 import { checkPermission } from "@/lib/permission";
 import { findCategoryById } from "../repositories";
+import { getStoreBySlug } from "@/lib/store";
 
 export async function getCategoryByIdAction(
     categoryId: string,
     storeSlug: string,
 ) {
     try {
-        const store = await getStoreContext(storeSlug);
+        const store = await getStoreBySlug(storeSlug);
 
         await checkPermission(store.id, "category", "edit");
 
-        const result = await findCategoryById(categoryId, store.id);
-        return { success: true, data: result };
+        const category = await findCategoryById(categoryId, store.id);
+        if (!category) {
+            return {
+                success: false,
+                error: "Kategori tidak ditemukan.",
+            };
+        }
+        return { success: true, data: category };
     } catch (error: unknown) {
         return {
             success: false,

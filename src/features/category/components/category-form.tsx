@@ -10,13 +10,13 @@ import { useCategoryMutations } from "../hooks/use-category-mutation";
 
 import { toast } from "sonner";
 import { CategoryInput, categorySchema } from "../schemas/category-schema";
-import { Category } from "../types";
 import { useEffect } from "react";
+import { CategoryRow } from "@/db/schema";
 
 interface CategoryFormProps {
     storeSlug: string;
     categoryId?: string;
-    initialData?: Category;
+    initialData?: CategoryRow;
     serverError?: string;
 }
 

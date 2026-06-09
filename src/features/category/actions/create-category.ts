@@ -3,16 +3,16 @@
 import { checkPermission } from "@/lib/permission";
 import { createCategory } from "../repositories/create";
 import { generateCategorySlug } from "../utils/generate-slug";
-import { getStoreContext } from "@/lib/action-guards";
 import { categorySchema } from "../schemas/category-schema";
 import { revalidatePath } from "next/cache";
+import { getStoreBySlug } from "@/lib/store";
 
 export async function createCategoryAction(storeSlug: string, values: unknown) {
     try {
         // 1. Ambil data toko berdasarkan slug
-        const store = await getStoreContext(storeSlug);
+        const store = await getStoreBySlug(storeSlug);
         if (!store) {
-            return { success: false, message: "Toko tidak ditemukan." };
+            return { success: false, error: "Toko tidak ditemukan." };
         }
 
         const storeId = store.id;
@@ -57,7 +57,7 @@ export async function createCategoryAction(storeSlug: string, values: unknown) {
 
         return {
             success: false,
-            message: errorMessage,
+            error: errorMessage,
         };
     }
 }

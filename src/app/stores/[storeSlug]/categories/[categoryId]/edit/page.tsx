@@ -9,8 +9,8 @@ export default async function EditCategoryPage({
     params: Promise<{ storeSlug: string; categoryId: string }>;
 }) {
     const { storeSlug, categoryId } = await params;
-    console.log("params >>>>", storeSlug, categoryId);
     const response = await getCategoryByIdAction(categoryId, storeSlug);
+
     return (
         <div className="bg-white p-8 md:p-12 rounded-[2rem] border border-slate-200/60 shadow-sm flex flex-col min-h-[420px] space-y-8 w-full">
             {/* TOP NAVIGATION & HEADER BAR */}

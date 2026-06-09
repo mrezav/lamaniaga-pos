@@ -1,6 +1,6 @@
 "use server";
 
-import { getStoreContext } from "@/lib/action-guards";
+import { getStoreBySlug } from "@/lib/store";
 import { findCategoriesByStoreId } from "../repositories";
 import { checkPermission } from "@/lib/permission";
 
@@ -15,7 +15,7 @@ interface getCategoriesParams {
 
 export async function getCategoriesAction(payload: getCategoriesParams) {
     try {
-        const store = await getStoreContext(payload.storeSlug);
+        const store = await getStoreBySlug(payload.storeSlug);
 
         await checkPermission(store.id, "category", "view");
 

@@ -1,10 +1,10 @@
 "use server";
 
-import { getStoreContext } from "@/lib/action-guards";
 import { CategoryInput, categorySchema } from "../schemas/category-schema";
 import { checkPermission } from "@/lib/permission";
 import { updateCategory } from "../repositories/update";
 import { revalidatePath } from "next/cache";
+import { getStoreBySlug } from "@/lib/store";
 
 export async function updateCategoryAction(
     categoryId: string,
@@ -12,8 +12,8 @@ export async function updateCategoryAction(
     input: CategoryInput,
 ) {
     try {
-        const store = await getStoreContext(storeSlug);
-        await checkPermission(store.id, "category", "edit");
+        const store = await getStoreBySlug(storeSlug);
+        const { userId } = await checkPermission(store.id, "category", "edit");
         const validatedFields = categorySchema.safeParse(input);
         if (!validatedFields.success) {
             return {
@@ -22,8 +22,9 @@ export async function updateCategoryAction(
             };
         }
         const updated = await updateCategory(
-            categoryId,
+            userId,
             store.id,
+            categoryId,
             validatedFields.data,
         );
 
@@ -44,7 +45,7 @@ export async function updateCategoryAction(
 
         return {
             success: false,
-            message: errorMessage,
+            error: errorMessage,
         };
     }
 }
