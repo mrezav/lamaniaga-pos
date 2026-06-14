@@ -1,16 +1,15 @@
-import { createClient } from "./supabase/server";
-import { getVerifiedMember } from "@/features/auth/repositories";
-import { hasPermission, Role } from "@/features/auth/types/permission-rule";
+import { MemberRole, MemberStatus } from "@/db/schema";
+import { PERMISSIONS, UserAction } from "@/types";
+import { findStoreMember } from "@/features/stores/repositories";
+import { verifyAuth } from "./auth";
 
+// Fungsi untuk melakukan check user login, verifikasi member dan hak akses
 export async function checkPermission(
     storeId: string,
-    resource: "category",
-    action: "create" | "edit" | "view" | "delete",
+    resource: keyof typeof PERMISSIONS,
+    action: UserAction,
 ) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    const user = await verifyAuth();
     if (!user) {
         throw new Error("Silahkan login terlebih dahulu");
     }
@@ -19,7 +18,11 @@ export async function checkPermission(
         throw new Error("Store ID tidak valid atau kosong");
     }
 
-    const verifiedMember = await getVerifiedMember(storeId, user.id);
+    const verifiedMember = await findStoreMember(
+        storeId,
+        user.id,
+        MemberStatus.ACTIVE,
+    );
     if (!verifiedMember) {
         throw new Error("Anda belum terdaftar atau aktif di toko ini");
     }
@@ -29,5 +32,15 @@ export async function checkPermission(
         throw new Error("Anda tidak memiliki akses untuk aksi ini");
     }
 
-    return { userId: user.id, role: verifiedMember.role as Role };
+    return { userId: user.id, role: verifiedMember.role as MemberRole };
+}
+
+// Fungsi pembantu (helper) instan untuk mengecek izin akses tanpa error TypeScript
+export function hasPermission(
+    role: MemberRole,
+    resource: keyof typeof PERMISSIONS,
+    action: UserAction,
+) {
+    const allowedRoles = PERMISSIONS[resource][action] as readonly MemberRole[];
+    return allowedRoles.includes(role);
 }

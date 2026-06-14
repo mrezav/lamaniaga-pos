@@ -1,21 +1,22 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-    getStoreMembersAction,
-    updateMemberStatusAction,
-} from "../services/join-actions";
-import { useToastStore } from "@/state/useToastStore";
 import { Button } from "@/components/ui/button";
 import { Check, X, Users, Loader2, Award } from "lucide-react";
+import { getStoreMembersAction } from "../actions/get-member";
+import { useStoreMutation } from "../hooks/use-store-mutation";
+import { MemberStatus } from "@/db/schema";
 
 interface StoreMembersTableProps {
     storeId: string;
 }
 
 export function StoreMembersTable({ storeId }: StoreMembersTableProps) {
-    const queryClient = useQueryClient();
-    const { showToast } = useToastStore();
+    const {
+        updateMemberStatusMutate,
+        isUpdatingMemberStatus,
+        updateMemberVariables,
+    } = useStoreMutation();
 
     // 1. Fetch store members with TanStack Query
     const { data, isLoading, error } = useQuery({
@@ -29,37 +30,49 @@ export function StoreMembersTable({ storeId }: StoreMembersTableProps) {
         },
     });
 
-    // 2. TanStack Query Mutation to update membership status
-    const mutation = useMutation({
-        mutationFn: async ({
+    const handleUpdateMember = async (
+        memberId: string,
+        status: MemberStatus,
+    ) => {
+        const response = await updateMemberStatusMutate({
+            storeId,
             memberId,
             status,
-        }: {
-            memberId: string;
-            status: "active" | "rejected";
-        }) => {
-            const result = await updateMemberStatusAction(memberId, status);
-            if (!result.success) {
-                throw new Error(result.error);
-            }
-            return result;
-        },
-        onSuccess: (_, variables) => {
-            const actionName =
-                variables.status === "active" ? "menyetujui" : "menolak";
-            showToast(`Berhasil ${actionName} anggota baru!`, "success");
-            // Invalidate query to refresh table data instantly
-            queryClient.invalidateQueries({
-                queryKey: ["storeMembers", storeId],
-            });
-        },
-        onError: (err: Error) => {
-            showToast(
-                err.message || "Gagal memperbarui status keanggotaan.",
-                "error",
-            );
-        },
-    });
+        });
+        console.log(response);
+    };
+
+    // 2. TanStack Query Mutation to update membership status
+    // const mutation = useMutation({
+    //     mutationFn: async ({
+    //         memberId,
+    //         status,
+    //     }: {
+    //         memberId: string;
+    //         status: "active" | "rejected";
+    //     }) => {
+    //         const result = await updateMemberStatusAction(memberId, status);
+    //         if (!result.success) {
+    //             throw new Error(result.error);
+    //         }
+    //         return result;
+    //     },
+    //     onSuccess: (_, variables) => {
+    //         const actionName =
+    //             variables.status === "active" ? "menyetujui" : "menolak";
+    //         showToast(`Berhasil ${actionName} anggota baru!`, "success");
+    //         // Invalidate query to refresh table data instantly
+    //         queryClient.invalidateQueries({
+    //             queryKey: ["storeMembers", storeId],
+    //         });
+    //     },
+    //     onError: (err: Error) => {
+    //         showToast(
+    //             err.message || "Gagal memperbarui status keanggotaan.",
+    //             "error",
+    //         );
+    //     },
+    // });
 
     if (isLoading) {
         return (
@@ -142,8 +155,9 @@ export function StoreMembersTable({ storeId }: StoreMembersTableProps) {
                                 const isActive = member.status === "active";
                                 const isRejected = member.status === "rejected";
                                 const isMutationPending =
-                                    mutation.isPending &&
-                                    mutation.variables?.memberId === member.id;
+                                    isUpdatingMemberStatus &&
+                                    updateMemberVariables?.memberId ===
+                                        member.id;
 
                                 return (
                                     <tr
@@ -223,11 +237,10 @@ export function StoreMembersTable({ storeId }: StoreMembersTableProps) {
                                                 <div className="flex items-center justify-end gap-2">
                                                     <Button
                                                         onClick={() =>
-                                                            mutation.mutate({
-                                                                memberId:
-                                                                    member.id,
-                                                                status: "active",
-                                                            })
+                                                            handleUpdateMember(
+                                                                member.id,
+                                                                MemberStatus.ACTIVE,
+                                                            )
                                                         }
                                                         disabled={
                                                             isMutationPending
@@ -235,8 +248,7 @@ export function StoreMembersTable({ storeId }: StoreMembersTableProps) {
                                                         className="h-8 px-3 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-none transition-all flex items-center gap-1 shadow-sm shadow-emerald-100/30"
                                                     >
                                                         {isMutationPending &&
-                                                        mutation.variables
-                                                            ?.status ===
+                                                        updateMemberVariables?.status ===
                                                             "active" ? (
                                                             <Loader2 className="w-3 h-3 animate-spin" />
                                                         ) : (
@@ -247,11 +259,10 @@ export function StoreMembersTable({ storeId }: StoreMembersTableProps) {
 
                                                     <Button
                                                         onClick={() =>
-                                                            mutation.mutate({
-                                                                memberId:
-                                                                    member.id,
-                                                                status: "rejected",
-                                                            })
+                                                            handleUpdateMember(
+                                                                member.id,
+                                                                MemberStatus.REJECTED,
+                                                            )
                                                         }
                                                         disabled={
                                                             isMutationPending
@@ -259,8 +270,7 @@ export function StoreMembersTable({ storeId }: StoreMembersTableProps) {
                                                         className="h-8 px-3 rounded-lg text-xs font-bold bg-red-50 text-red-700 hover:bg-red-100 border-none transition-all flex items-center gap-1 shadow-sm shadow-red-100/30"
                                                     >
                                                         {isMutationPending &&
-                                                        mutation.variables
-                                                            ?.status ===
+                                                        updateMemberVariables?.status ===
                                                             "rejected" ? (
                                                             <Loader2 className="w-3 h-3 animate-spin" />
                                                         ) : (

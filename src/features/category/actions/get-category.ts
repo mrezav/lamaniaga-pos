@@ -3,6 +3,7 @@
 import { checkPermission } from "@/lib/permission";
 import { findCategoryById } from "../repositories";
 import { getStoreBySlug } from "@/lib/store";
+import { UserAction } from "@/types";
 
 export async function getCategoryByIdAction(
     categoryId: string,
@@ -11,7 +12,7 @@ export async function getCategoryByIdAction(
     try {
         const store = await getStoreBySlug(storeSlug);
 
-        await checkPermission(store.id, "category", "edit");
+        await checkPermission(store.id, "category", UserAction.VIEW);
 
         const category = await findCategoryById(categoryId, store.id);
         if (!category) {

@@ -1,14 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
-import { db } from "@/db";
-import { stores } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
 import { QrCode } from "lucide-react";
 import {
     StoreCodeManager,
     StoreMembersTable,
 } from "@/features/stores/components";
-
+import { toast } from "sonner";
+import { getStoreAction } from "@/features/stores/actions/get-store";
 interface StoreCodePageProps {
     params: Promise<{
         storeSlug: string;
@@ -17,27 +13,10 @@ interface StoreCodePageProps {
 
 export default async function StoreCodePage({ params }: StoreCodePageProps) {
     const { storeSlug } = await params;
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-        redirect("/login");
-    }
-
-    // 1. Fetch current store by slug
-    const store = await db.query.stores.findFirst({
-        where: eq(stores.slug, storeSlug),
-    });
-
-    if (!store) {
-        redirect("/stores");
-    }
-
-    // 2. Security Guard: Only the store owner can access this page
-    if (store.ownerId !== user.id) {
-        redirect(`/stores/${storeSlug}/dashboard`);
+    // Mengambil data store langsung ke action
+    const { success, data, error } = await getStoreAction(storeSlug);
+    if (!success) {
+        toast.error(error);
     }
 
     return (
@@ -62,14 +41,14 @@ export default async function StoreCodePage({ params }: StoreCodePageProps) {
                 {/* Left Column: Code Manager */}
                 <div className="lg:col-span-1 space-y-6">
                     <StoreCodeManager
-                        storeId={store.id}
-                        initialCode={store.joinCode || ""}
+                        storeId={data ? data.id : ""}
+                        initialCode={data ? data.joinCode : ""}
                     />
                 </div>
 
                 {/* Right Column: Members Table */}
                 <div className="lg:col-span-2">
-                    <StoreMembersTable storeId={store.id} />
+                    <StoreMembersTable storeId={data ? data.id : ""} />
                 </div>
             </div>
         </div>

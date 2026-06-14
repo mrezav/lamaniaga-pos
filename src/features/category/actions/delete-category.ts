@@ -3,6 +3,7 @@
 import { checkPermission } from "@/lib/permission";
 import { getStoreBySlug } from "@/lib/store";
 import { deleteCategory } from "../repositories/delete-one";
+import { UserAction } from "@/types";
 
 export async function deleteCategoryAction(
     categoryId: string,
@@ -10,11 +11,7 @@ export async function deleteCategoryAction(
 ) {
     try {
         const store = await getStoreBySlug(storeSlug);
-        const { userId } = await checkPermission(
-            store.id,
-            "category",
-            "delete",
-        );
+        await checkPermission(store.id, "category", UserAction.DELETE);
         const result = await deleteCategory(categoryId, store.id);
         return {
             success: true,

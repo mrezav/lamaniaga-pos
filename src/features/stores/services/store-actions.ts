@@ -101,7 +101,6 @@ export async function createStoreTransaction(input: CreateStoreInput) {
                     phoneNumber: validInput.phoneNumber || null,
                     logoUrl: validInput.logoUrl || null,
                     bannerUrl: validInput.bannerUrl || null,
-                    ownerId,
                 })
                 .returning({
                     id: stores.id,
@@ -131,6 +130,7 @@ export async function createStoreTransaction(input: CreateStoreInput) {
             return { data: newStore, error: null };
         });
     } catch (error: any) {
+        console.dir(error, { depth: null });
         console.error("Transaction failed in createStoreTransaction:", error);
 
         const isUniqueViolation =

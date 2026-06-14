@@ -5,6 +5,7 @@ import { checkPermission } from "@/lib/permission";
 import { updateCategory } from "../repositories/update";
 import { revalidatePath } from "next/cache";
 import { getStoreBySlug } from "@/lib/store";
+import { UserAction } from "@/types";
 
 export async function updateCategoryAction(
     categoryId: string,
@@ -13,7 +14,11 @@ export async function updateCategoryAction(
 ) {
     try {
         const store = await getStoreBySlug(storeSlug);
-        const { userId } = await checkPermission(store.id, "category", "edit");
+        const { userId } = await checkPermission(
+            store.id,
+            "category",
+            UserAction.EDIT,
+        );
         const validatedFields = categorySchema.safeParse(input);
         if (!validatedFields.success) {
             return {

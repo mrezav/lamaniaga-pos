@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { generateJoinCodeAction } from "../services/join-actions";
 import { useToastStore } from "@/state/useToastStore";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, QrCode, RefreshCw, Loader2 } from "lucide-react";
+import { generateJoinCodeAction } from "../actions/generate-code";
 
 interface StoreCodeManagerProps {
     storeId: string;
-    initialCode: string;
+    initialCode: string | null;
 }
 
 export function StoreCodeManager({

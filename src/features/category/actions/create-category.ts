@@ -6,6 +6,7 @@ import { generateCategorySlug } from "../utils/generate-slug";
 import { categorySchema } from "../schemas/category-schema";
 import { revalidatePath } from "next/cache";
 import { getStoreBySlug } from "@/lib/store";
+import { UserAction } from "@/types";
 
 export async function createCategoryAction(storeSlug: string, values: unknown) {
     try {
@@ -19,7 +20,7 @@ export async function createCategoryAction(storeSlug: string, values: unknown) {
 
         // 2. Amankan dengan guard menggunakan storeId asli
         // Jika user tidak punya akses (misal: Cashier), guard melempar error dan langsung lompat ke catch
-        await checkPermission(storeId, "category", "create");
+        await checkPermission(storeId, "category", UserAction.CREATE);
 
         // 3. Validasi field data input menggunakan Zod
         const validatedFields = categorySchema.safeParse(values);
