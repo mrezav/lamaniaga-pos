@@ -3,6 +3,8 @@ import { CategoryInput } from "../schemas/category-schema";
 import { updateCategoryAction } from "../actions/update-category";
 import { createCategoryAction } from "../actions/create-category";
 import { deleteCategoryAction } from "../actions";
+import { toast } from "sonner";
+
 export const useCategoryMutations = (
     storeSlug: string,
     categoryId?: string,
@@ -22,13 +24,11 @@ export const useCategoryMutations = (
             // Kembalikan response apa adanya agar validationErrors bisa dibaca di form
             return response;
         },
-        onSuccess: (res) => {
+        onSuccess: () => {
             // Auto invalidasi cache agar data di tabel ter-refresh
-            if (res.success) {
-                queryClient.invalidateQueries({
-                    queryKey: ["categories", storeSlug],
-                });
-            }
+            queryClient.invalidateQueries({
+                queryKey: ["categories", storeSlug],
+            });
         },
     });
 
@@ -46,17 +46,15 @@ export const useCategoryMutations = (
             }
             return response;
         },
-        onSuccess: (res) => {
-            if (res.success) {
-                // Invalidasi cache daftar kategori
-                queryClient.invalidateQueries({
-                    queryKey: ["categories", storeSlug],
-                });
-                // Invalidasi cache untuk data kategori spesifik ini berdasarkan ID-nya
-                queryClient.invalidateQueries({
-                    queryKey: ["category", storeSlug, categoryId],
-                });
-            }
+        onSuccess: () => {
+            // Invalidasi cache daftar kategori
+            queryClient.invalidateQueries({
+                queryKey: ["categories", storeSlug],
+            });
+            // Invalidasi cache untuk data kategori spesifik ini berdasarkan ID-nya
+            queryClient.invalidateQueries({
+                queryKey: ["category", storeSlug, categoryId],
+            });
         },
     });
 
@@ -75,6 +73,9 @@ export const useCategoryMutations = (
             queryClient.invalidateQueries({
                 queryKey: ["categories", storeSlug],
             });
+        },
+        onError: (error) => {
+            toast.error(error.message);
         },
     });
 

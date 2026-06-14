@@ -10,17 +10,48 @@ import { sql } from "drizzle-orm";
 import { users } from "./users";
 import { stores } from "./stores";
 
+// membuat sebuah object const
+export const MemberStatus = {
+    IDLE: "idle",
+    ACTIVE: "active",
+    PENDING: "pending",
+    REJECTED: "rejected",
+} as const;
+
+// membuat array of status dari object diatas untuk keperluan enum drizzle
+export const MemberStatusValues = [
+    MemberStatus.IDLE,
+    MemberStatus.ACTIVE,
+    MemberStatus.PENDING,
+    MemberStatus.REJECTED,
+] as const;
+
+// membuat sebuah type dengan value berdasarkan status yang terdaftar diatas
+export type MemberStatus = (typeof MemberStatusValues)[number];
+
+export const MemberRole = {
+    OWNER: "owner",
+    MANAGER: "manager",
+    CASHIER: "cashier",
+};
+export const MemberRoleValues = [
+    MemberRole.OWNER,
+    MemberRole.MANAGER,
+    MemberRole.CASHIER,
+] as const;
+export type MemberRole = (typeof MemberRoleValues)[number];
+
 export const storeMembers = pgTable(
     "store_members",
     {
         id: uuid("id").defaultRandom().primaryKey().notNull(),
         userId: uuid("user_id").notNull(),
         storeId: uuid("store_id").notNull(),
-        role: text("role", { enum: ["owner", "manager", "cashier"] })
+        role: text("role", { enum: MemberRoleValues })
             .default("cashier")
             .notNull(),
         status: text("status", {
-            enum: ["idle", "pending", "active", "rejected"],
+            enum: MemberStatusValues,
         })
             .default("active")
             .notNull(),

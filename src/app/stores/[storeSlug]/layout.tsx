@@ -1,12 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
-import { profiles, stores, storeMembers } from "@/db/schema";
+import { profiles, storeMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { StoreLayoutClient } from "@/features/stores/components";
-import { Toaster } from "sonner";
 import { getStoreBySlug } from "@/lib/store";
-import { getVerifiedMember } from "@/features/auth/repositories";
+import { findStoreMember } from "@/features/stores/repositories";
 
 interface StoreLayoutProps {
     children: React.ReactNode;
@@ -70,7 +69,7 @@ export default async function StoreLayout({
         userProfile.lastActiveStoreId = store.id;
     }
 
-    const storeMember = await getVerifiedMember(store.id, user.id);
+    const storeMember = await findStoreMember(store.id, user.id);
     if (!storeMember) {
         redirect("/stores");
     }
@@ -81,7 +80,6 @@ export default async function StoreLayout({
             profile={userProfile}
             storeMember={storeMember}
         >
-            <Toaster position="top-right" richColors />
             {children}
         </StoreLayoutClient>
     );

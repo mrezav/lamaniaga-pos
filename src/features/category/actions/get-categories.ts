@@ -3,6 +3,7 @@
 import { getStoreBySlug } from "@/lib/store";
 import { findCategoriesByStoreId } from "../repositories";
 import { checkPermission } from "@/lib/permission";
+import { UserAction } from "@/types";
 
 interface getCategoriesParams {
     storeSlug: string;
@@ -17,7 +18,7 @@ export async function getCategoriesAction(payload: getCategoriesParams) {
     try {
         const store = await getStoreBySlug(payload.storeSlug);
 
-        await checkPermission(store.id, "category", "view");
+        await checkPermission(store.id, "category", UserAction.VIEW);
 
         const result = await findCategoriesByStoreId({
             storeId: store.id,

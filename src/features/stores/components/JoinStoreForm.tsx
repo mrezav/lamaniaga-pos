@@ -2,19 +2,17 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import { joinStoreSchema, type JoinStoreInput } from "../schemas/join-schema";
-import { submitJoinCodeAction } from "../services/join-actions";
-import { useToastStore } from "@/state/useToastStore";
 import { Button } from "@/components/ui/button";
 import { Users, Loader2 } from "lucide-react";
+import { useStoreMutation } from "../hooks/use-store-mutation";
 
 interface JoinStoreFormProps {
     userId: string;
 }
 
 export function JoinStoreForm({ userId }: JoinStoreFormProps) {
-    const { showToast } = useToastStore();
+    const { joinStoreMutate, isJoining } = useStoreMutation();
 
     const {
         register,
@@ -29,34 +27,37 @@ export function JoinStoreForm({ userId }: JoinStoreFormProps) {
     });
 
     // TanStack Query Mutation for submitting join code
-    const mutation = useMutation({
-        mutationFn: async (data: JoinStoreInput) => {
-            const result = await submitJoinCodeAction(data.joinCode, userId);
-            if (!result.success) {
-                throw new Error(result.error);
-            }
-            return result;
-        },
-        onSuccess: () => {
-            showToast(
-                "Permintaan terkirim! Silakan hubungi pemilik toko untuk menyetujui pendaftaran Anda.",
-                "success",
-            );
-            reset();
-        },
-        onError: (error: unknown) => {
-            const message =
-                error instanceof Error ? error.message : String(error);
-            showToast(
-                message || "Gagal mengajukan permintaan gabung.",
-                "error",
-            );
-        },
-    });
+    // const mutation = useMutation({
+    //     mutationFn: async (data: JoinStoreInput) => {
+    //         const result = await submitJoinCodeAction(data.joinCode, userId);
+    //         if (!result.success) {
+    //             throw new Error(result.error);
+    //         }
+    //         return result;
+    //     },
+    //     onSuccess: () => {
+    //         showToast(
+    //             "Permintaan terkirim! Silakan hubungi pemilik toko untuk menyetujui pendaftaran Anda.",
+    //             "success",
+    //         );
+    //         reset();
+    //     },
+    //     onError: (error: unknown) => {
+    //         const message =
+    //             error instanceof Error ? error.message : String(error);
+    //         showToast(
+    //             message || "Gagal mengajukan permintaan gabung.",
+    //             "error",
+    //         );
+    //     },
+    // });
 
-    const onSubmit = (data: JoinStoreInput) => {
-        mutation.mutate(data);
-    };
+    async function onSubmit(data: JoinStoreInput) {
+        const response = await joinStoreMutate(data);
+        if (response.success) {
+            reset();
+        }
+    }
 
     return (
         <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-6 hover:shadow-lg transition-all group animate-in fade-in slide-in-from-right-4 duration-700">
@@ -82,7 +83,7 @@ export function JoinStoreForm({ userId }: JoinStoreFormProps) {
                     <input
                         type="text"
                         id="joinCode"
-                        disabled={mutation.isPending}
+                        disabled={isJoining}
                         className={`w-full px-4 h-14 border rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-slate-50/50 text-center font-mono text-lg tracking-widest uppercase ${
                             errors.joinCode
                                 ? "border-red-500 focus:ring-red-500"
@@ -100,11 +101,11 @@ export function JoinStoreForm({ userId }: JoinStoreFormProps) {
 
                 <Button
                     type="submit"
-                    disabled={mutation.isPending}
+                    disabled={isJoining}
                     variant="secondary"
                     className="w-full h-14 text-lg font-bold rounded-2xl bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-none transition-all flex items-center justify-center gap-2"
                 >
-                    {mutation.isPending ? (
+                    {isJoining ? (
                         <>
                             <Loader2 className="w-5 h-5 animate-spin" />
                             <span>Memproses...</span>

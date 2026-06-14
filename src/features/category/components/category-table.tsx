@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCategoryMutations } from "../hooks/use-category-mutation";
+import { redirect } from "next/navigation";
 
 export function CategoryTable({ storeSlug }: { storeSlug: string }) {
     const [search, setSearch] = useState("");
@@ -44,6 +45,11 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
         if (isConfimed) {
             await deleteCategory(id);
         }
+    }
+
+    async function handleEdit(id: string) {
+        // await checkPermission("1", "membership", "edit");
+        redirect(`/stores/${storeSlug}/categories/${id}/edit`);
     }
 
     // Debounce pencarian agar tidak membebani database
@@ -159,17 +165,19 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
                                         </TableCell>
                                         <TableCell>
                                             <Button
-                                                asChild
+                                                onClick={() =>
+                                                    handleEdit(cat.id)
+                                                }
                                                 variant="ghost"
                                                 size="sm"
                                                 className="rounded-lg text-slate-600"
                                             >
-                                                <Link
+                                                {/* <Link
                                                     href={`/stores/${storeSlug}/categories/${cat.id}/edit`}
-                                                >
-                                                    <Edit2 className="h-4 w-4 mr-2" />
-                                                    Edit
-                                                </Link>
+                                                > */}
+                                                <Edit2 className="h-4 w-4 mr-2" />
+                                                Edit
+                                                {/* </Link> */}
                                             </Button>
                                             <Button
                                                 variant="ghost"

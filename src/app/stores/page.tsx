@@ -1,56 +1,39 @@
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { db } from "@/db";
-import { profiles, stores, storeMembers } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
-import { redirect } from "next/navigation";
 import { OnboardingHeader } from "@/components/shared/OnboardingHeader";
 import { StoreSelector, JoinStoreForm } from "@/features/stores/components";
+import {
+    dehydrate,
+    HydrationBoundary,
+    QueryClient,
+} from "@tanstack/react-query";
+import { getUserProfileAction } from "@/features/user/actions/get-user-profile";
+import { verifyAuth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { ProfileRow } from "@/db/schema";
+import { getUserStoresActions } from "@/features/stores/actions/get-user-stores";
 
 export default async function OnboardingPage() {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    const queryClient = new QueryClient();
 
-    if (!user) {
+    await queryClient.prefetchQuery({
+        queryKey: ["user-stores"],
+        queryFn: async () => {
+            const response = await getUserStoresActions();
+            if (!response.success) {
+                throw new Error(response.error);
+            }
+            return response.data;
+        },
+    });
+
+    const user = await verifyAuth();
+    const response = await getUserProfileAction(user.id);
+    if (!response.success || !response.data) {
         redirect("/login");
     }
-
-    // Fetch the user's profile
-    const userProfile = await db.query.profiles.findFirst({
-        where: eq(profiles.id, user.id),
-    });
-
-    // Query stores owned by the user
-    const ownedStores = await db.query.stores.findMany({
-        where: eq(stores.ownerId, user.id),
-    });
-
-    // Query stores the user works at via the storeMembers table using a single JOIN query
-    const joinedStores = await db
-        .select({
-            store: stores,
-        })
-        .from(stores)
-        .innerJoin(storeMembers, eq(stores.id, storeMembers.storeId))
-        .where(
-            and(
-                eq(storeMembers.userId, user.id),
-                eq(storeMembers.status, "active"),
-            ),
-        );
-
-    const memberStores = joinedStores.map((js) => js.store);
-
-    // Combine them uniquely by store ID
-    const storeMap = new Map<string, (typeof ownedStores)[number]>();
-    ownedStores.forEach((s) => storeMap.set(s.id, s));
-    memberStores.forEach((s) => storeMap.set(s.id, s));
-
-    const allStores = Array.from(storeMap.values());
+    const userProfile: ProfileRow = response.data;
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -59,13 +42,16 @@ export default async function OnboardingPage() {
                 <div className="max-w-4xl w-full space-y-8 py-8">
                     <div className="text-center space-y-2 animate-in fade-in slide-in-from-top-4 duration-700">
                         <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
-                            Selamat Datang {userProfile?.fullName}!
+                            Selamat Datang {userProfile.fullName}!
                         </h1>
                         <p className="text-slate-500 text-lg">
                             Mulai langkah Anda untuk mengelola toko dengan lebih
                             mudah
                         </p>
                     </div>
+                    <HydrationBoundary state={dehydrate(queryClient)}>
+                        <StoreSelector />
+                    </HydrationBoundary>
 
                     <div className="grid md:grid-cols-2 gap-8 mt-6">
                         {/* Section 1: Buat Toko Baru */}
@@ -93,14 +79,14 @@ export default async function OnboardingPage() {
                         <JoinStoreForm userId={user.id} />
                     </div>
 
-                    {allStores.length > 0 && (
+                    {/* {joinedStores.length > 0 && (
                         <div className="mt-8">
                             <StoreSelector
-                                stores={allStores}
+                                stores={joinedStores}
                                 userId={user.id}
                             />
                         </div>
-                    )}
+                    )} */}
                 </div>
             </main>
         </div>

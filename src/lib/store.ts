@@ -1,4 +1,4 @@
-import { findBySlug } from "@/features/stores/repositories";
+import { findStoreBySlug } from "@/features/stores/repositories";
 import { cache } from "react";
 
 /**
@@ -11,7 +11,7 @@ export const getStoreBySlug = cache(async (storeSlug: string) => {
         throw new Error("Slug toko tidak valid atau kosong");
     }
 
-    const store = await findBySlug(storeSlug);
+    const store = await findStoreBySlug(storeSlug);
     if (!store) {
         throw new Error("Toko tidak ditemukan");
     }

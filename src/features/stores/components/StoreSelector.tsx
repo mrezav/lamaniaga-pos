@@ -5,26 +5,30 @@ import { useRouter } from "next/navigation";
 import { setActiveStoreAction } from "@/features/stores/services/store-actions";
 import { useToastStore } from "@/state/useToastStore";
 import { Store, ArrowRight, Loader2 } from "lucide-react";
+import { StoreRow } from "@/db/schema";
+import { useStores } from "../hooks/use-stores";
 
-interface StoreData {
-    id: string;
-    name: string;
-    slug: string;
-    logoUrl?: string | null;
-    ownerId: string;
-}
+// interface StoreData {
+//     id: string;
+//     name: string;
+//     slug: string;
+//     logoUrl?: string | null;
+//     ownerId: string;
+// }
 
-interface StoreSelectorProps {
-    stores: StoreData[];
-    userId: string;
-}
+// interface StoreSelectorProps {
+//     stores: StoreRow;
+//     userId: string;
+// }
 
-export function StoreSelector({ stores, userId }: StoreSelectorProps) {
+export function StoreSelector() {
     const router = useRouter();
     const { showToast } = useToastStore();
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    const { getUserStoresQuery } = useStores();
 
-    const handleSelectStore = async (store: StoreData) => {
+    const data = getUserStoresQuery.data;
+    const handleSelectStore = async (store: StoreRow) => {
         if (selectedId) return;
         setSelectedId(store.id);
 
@@ -44,10 +48,10 @@ export function StoreSelector({ stores, userId }: StoreSelectorProps) {
     };
 
     return (
-        <div className="w-full max-w-4xl mx-auto py-12 px-4 space-y-10 animate-in fade-in duration-500">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                {stores.map((store) => {
-                    const isOwner = store.ownerId === userId;
+        <div className="w-full max-w-4xl mx-auto py-2 px-4 space-y-10 animate-in fade-in duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-1">
+                {data?.map(({ store, member }) => {
+                    // const isOwner = store.ownerId === userId;
                     const isLoading = selectedId === store.id;
                     const isAnyLoading = selectedId !== null;
 
@@ -82,7 +86,7 @@ export function StoreSelector({ stores, userId }: StoreSelectorProps) {
                                         {store.name}
                                     </h3>
                                     <div className="flex items-center gap-2">
-                                        {isOwner ? (
+                                        {/* {isOwner ? (
                                             <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100/50 rounded-md">
                                                 Pemilik Toko
                                             </span>
@@ -93,6 +97,9 @@ export function StoreSelector({ stores, userId }: StoreSelectorProps) {
                                         )}
                                         <span className="text-xs text-slate-400 font-medium truncate font-mono">
                                             /{store.slug}
+                                        </span> */}
+                                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100/50 rounded-md">
+                                            {member.role}
                                         </span>
                                     </div>
                                 </div>

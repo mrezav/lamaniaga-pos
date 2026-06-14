@@ -20,7 +20,6 @@ import {
     Check,
     LayoutGrid,
 } from "lucide-react";
-import { getVerifiedMember } from "@/features/auth/repositories";
 import { ProfileRow, StoreMemberRow, StoreRow } from "@/db/schema";
 
 interface StoreLayoutClientProps {
@@ -83,8 +82,8 @@ export function StoreLayoutClient({
 
     if (storeMember && storeMember?.role == "owner") {
         menuItems.push({
-            name: "Kode Toko",
-            href: `/stores/${store.slug}/store-code`,
+            name: "Member Toko",
+            href: `/stores/${store.slug}/store-member`,
             icon: QrCode,
         });
     }
@@ -93,7 +92,7 @@ export function StoreLayoutClient({
         dashboard: "Ringkasan Toko",
         categories: "Kategori",
         products: "Produk",
-        "store-code": "Kode Toko",
+        "store-member": "Member Toko",
     };
     const currentPage = pathname.split("/").pop() || "";
     const title = routeLabels[currentPage] || currentPage;
