@@ -3,33 +3,38 @@
 import { signUpParams } from "../types/auth";
 import { registerSchema } from "../schema/auth";
 import { signUp } from "../repositories";
+import { getErrorMessage } from "@/lib/utils";
 
 export async function register(input: signUpParams) {
-    const validated = registerSchema.safeParse(input);
-    if (!validated.success) {
-        return {
-            success: false,
-            message: validated.error.issues[0]?.message ?? "Data tidak valid",
-        };
-    }
-
-    const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback`;
-    const { error } = await signUp({
-        email: validated.data.email,
-        fullName: validated.data.fullName,
-        password: validated.data.password,
-        redirectTo: redirectTo,
-    });
-
-    if (error) {
-        if (error.message.toLowerCase().includes("already")) {
+    try {
+        const validated = registerSchema.safeParse(input);
+        if (!validated.success) {
             return {
                 success: false,
-                message: "Email sudah terdaftar",
+                validationErrors: validated.error.flatten().fieldErrors,
             };
         }
 
-        throw error;
+        const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback`;
+        const { error } = await signUp({
+            email: validated.data.email,
+            fullName: validated.data.fullName,
+            password: validated.data.password,
+            redirectTo: redirectTo,
+        });
+
+        if (error) {
+            if (error.message.toLowerCase().includes("already")) {
+                return {
+                    success: false,
+                    error: "Email sudah terdaftar",
+                };
+            }
+
+            throw error;
+        }
+        return { success: true };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
-    return { success: true };
 }

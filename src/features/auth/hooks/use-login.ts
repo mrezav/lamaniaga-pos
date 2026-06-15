@@ -5,13 +5,23 @@ import { toast } from "sonner";
 
 export function useLogin() {
     return useMutation({
-        mutationFn: ({ email, password }: LoginInput) =>
-            login({ email, password }),
-        onSuccess: () => {
-            toast.success("Selamat datang");
+        mutationFn: async (data: LoginInput) => {
+            const result = await login(data);
+            // Jika terjadi error interal sistem
+            if (!result.success && result.error) {
+                throw new Error(result.error);
+            }
+            // Jika sukses atau terkena error validasi
+            return result;
         },
-        onError: () => {
-            toast.error("Login error");
+        onSuccess: (res) => {
+            // Jika success dan tidak terjadi error validasi
+            if (res.success) {
+                toast.success("Login Berhasil");
+            }
+        },
+        onError: (error) => {
+            toast.error(error.message);
         },
     });
 }

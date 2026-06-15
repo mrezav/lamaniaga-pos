@@ -1,42 +1,46 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useLogin } from "@/features/auth/hooks/use-login";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { LoginInput } from "@/features/auth/types";
 
 export default function LoginPage() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
     const router = useRouter();
     const loginMutation = useLogin();
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
-        setLoading(true);
+    const form = useForm<LoginInput>({
+        defaultValues: {
+            email: "",
+            password: "",
+        },
+    });
+
+    async function handleLogin(data: LoginInput) {
+        form.clearErrors();
 
         try {
-            // const result = await login({ email, password });
-            const result = await loginMutation.mutateAsync({ email, password });
+            const result = await loginMutation.mutateAsync(data);
+            if (!result.success && result.validationErrors) {
+                Object.entries(result.validationErrors).forEach(
+                    ([field, errors]) => {
+                        if (!errors?.[0]) return;
 
-            if (!result.success) {
-                setError(result.message ?? "login gagal");
+                        form.setError(field as keyof LoginInput, {
+                            message: errors[0],
+                        });
+                    },
+                );
+                return;
             }
-
             router.push("/stores");
-            router.refresh();
-        } catch (err) {
-            setError("Terjadi gangunan internal");
-            console.error(err);
-        } finally {
-            setLoading(false);
+        } catch (error) {
+            console.error(error);
         }
-    };
+    }
 
     return (
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
@@ -49,25 +53,25 @@ export default function LoginPage() {
                 </p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-6">
-                {error && (
-                    <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg animate-in fade-in slide-in-from-top-1">
-                        {error}
-                    </div>
-                )}
-
+            <form
+                onSubmit={form.handleSubmit(handleLogin)}
+                className="space-y-6"
+            >
                 <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">
                         Email
                     </label>
                     <input
                         type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        {...form.register("email")}
                         className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50/50"
                         placeholder="john@example.com"
                     />
+                    {form.formState.errors.email && (
+                        <p className="text-sm text-red-500">
+                            {form.formState.errors.email?.message}
+                        </p>
+                    )}
                 </div>
 
                 <div className="space-y-2">
@@ -76,20 +80,23 @@ export default function LoginPage() {
                     </label>
                     <input
                         type="password"
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        {...form.register("password")}
                         className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50/50"
                         placeholder="••••••••"
                     />
+                    {form.formState.errors.password && (
+                        <p className="text-sm text-red-500">
+                            {form.formState.errors.password?.message}
+                        </p>
+                    )}
                 </div>
 
                 <Button
                     type="submit"
                     className="w-full h-11 text-base font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 transition-colors"
-                    disabled={loading}
+                    disabled={form.formState.isSubmitting}
                 >
-                    {loading ? (
+                    {form.formState.isSubmitting ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                         "Masuk Sekarang"

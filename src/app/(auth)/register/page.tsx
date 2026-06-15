@@ -1,61 +1,51 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useRegister } from "@/features/auth/hooks";
+import { useForm } from "react-hook-form";
+import { RegisterInput } from "@/features/auth/types";
 
 export default function RegisterPage() {
-    const [fullName, setFullName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
     const router = useRouter();
     const registerMutation = useRegister();
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
-        setLoading(true);
+    const form = useForm<RegisterInput>({
+        defaultValues: {
+            fullName: "",
+            email: "",
+            password: "",
+        },
+    });
 
-        // Client-side validation
-        const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d).{8,}$/;
-        if (!passwordRegex.test(password)) {
-            setError(
-                "Password minimal 8 karakter, terdiri dari huruf dan angka",
-            );
-            setLoading(false);
-            return;
-        }
+    async function handleRegister(data: RegisterInput) {
+        form.clearErrors();
 
         try {
-            // const res = await fetch("/api/users", {
-            //     method: "POST",
-            //     headers: { "Content-Type": "application/json" },
-            //     body: JSON.stringify({ full_name: fullName, email, password }),
-            // });
-            // const result = await res.json();
+            const result = await registerMutation.mutateAsync(data);
+            if (!result.success && result.validationErrors) {
+                Object.entries(result.validationErrors).forEach(
+                    ([field, errors]) => {
+                        if (!errors?.[0]) return;
 
-            const result = await registerMutation.mutateAsync({
-                fullName,
-                email,
-                password,
-            });
-
-            if (!result.success) {
-                setError(result.message || "Terjadi kesalahan");
+                        form.setError(field as keyof RegisterInput, {
+                            message: errors[0],
+                        });
+                    },
+                );
+                return;
             }
             router.push("/verify-email");
         } catch (error) {
             console.error(error);
-            setError("Gagal menghubungi server");
-        } finally {
-            setLoading(false);
+            // ERROR INTERNAL SISTEM AKAN TERTANGKAP DI SINI
+            // Kita biarkan CATCH ini kosong karena toast error-nya
+            // sudah ditangani secara global oleh callback `onError` di custom hook.
+            // Tujuannya di sini hanya agar aplikasi TIDAK CRASH.
         }
-    };
+    }
 
     return (
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
@@ -68,25 +58,25 @@ export default function RegisterPage() {
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {error && (
-                    <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg animate-in fade-in slide-in-from-top-1">
-                        {error}
-                    </div>
-                )}
-
+            <form
+                onSubmit={form.handleSubmit(handleRegister)}
+                className="space-y-6"
+            >
                 <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">
                         Nama Lengkap
                     </label>
                     <input
                         type="text"
-                        required
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
+                        {...form.register("fullName")}
                         className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50/50"
                         placeholder="John Doe"
                     />
+                    {form.formState.errors.fullName && (
+                        <p className="text-sm text-red-500">
+                            {form.formState.errors.fullName?.message}
+                        </p>
+                    )}
                 </div>
 
                 <div className="space-y-2">
@@ -95,12 +85,15 @@ export default function RegisterPage() {
                     </label>
                     <input
                         type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        {...form.register("email")}
                         className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50/50"
                         placeholder="john@example.com"
                     />
+                    {form.formState.errors.email && (
+                        <p className="text-sm text-red-500">
+                            {form.formState.errors.email?.message}
+                        </p>
+                    )}
                 </div>
 
                 <div className="space-y-2">
@@ -109,23 +102,23 @@ export default function RegisterPage() {
                     </label>
                     <input
                         type="password"
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        {...form.register("password")}
                         className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50/50"
                         placeholder="••••••••"
                     />
-                    <p className="text-xs text-slate-400">
-                        Min. 8 karakter, kombinasi huruf & angka
-                    </p>
+                    {form.formState.errors.password && (
+                        <p className="text-sm text-red-500">
+                            {form.formState.errors.password?.message}
+                        </p>
+                    )}
                 </div>
 
                 <Button
                     type="submit"
                     className="w-full h-11 text-base font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 transition-colors"
-                    disabled={loading}
+                    disabled={form.formState.isSubmitting}
                 >
-                    {loading ? (
+                    {form.formState.isSubmitting ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                         "Daftar Sekarang"

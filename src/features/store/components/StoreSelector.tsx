@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { setActiveStoreAction } from "@/features/stores/services/store-actions";
+import { setActiveStoreAction } from "@/features/store/services/store-actions";
 import { useToastStore } from "@/state/useToastStore";
 import { Store, ArrowRight, Loader2 } from "lucide-react";
 import { StoreRow } from "@/db/schema";

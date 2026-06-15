@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { OnboardingHeader } from "@/components/shared/OnboardingHeader";
-import { StoreSelector, JoinStoreForm } from "@/features/stores/components";
+import { StoreSelector, JoinStoreForm } from "@/features/store/components";
 import {
     dehydrate,
     HydrationBoundary,
@@ -12,7 +12,7 @@ import { getUserProfileAction } from "@/features/user/actions/get-user-profile";
 import { verifyAuth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { ProfileRow } from "@/db/schema";
-import { getUserStoresActions } from "@/features/stores/actions/get-user-stores";
+import { getUserStoresActions } from "@/features/store/actions/get-user-stores";
 
 export default async function OnboardingPage() {
     const queryClient = new QueryClient();

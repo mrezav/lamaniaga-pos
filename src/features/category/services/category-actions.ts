@@ -6,7 +6,7 @@ import { categories } from "@/db/schema";
 import { revalidatePath } from "next/cache";
 import { ActionResponse } from "@/types";
 import { guard } from "@/lib/guard";
-import { getStoreBySlug } from "@/features/stores/repositories";
+import { getStoreBySlug } from "@/features/store/repositories";
 
 const generateSlug = (name: string) => {
     return name

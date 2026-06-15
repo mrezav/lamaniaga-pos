@@ -2,9 +2,9 @@ import { QrCode } from "lucide-react";
 import {
     StoreCodeManager,
     StoreMembersTable,
-} from "@/features/stores/components";
+} from "@/features/store/components";
 import { toast } from "sonner";
-import { getStoreAction } from "@/features/stores/actions/get-store";
+import { getStoreAction } from "@/features/store/actions/get-store";
 interface StoreCodePageProps {
     params: Promise<{
         storeSlug: string;

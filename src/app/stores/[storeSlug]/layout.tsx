@@ -3,9 +3,9 @@ import { db } from "@/db";
 import { profiles, storeMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { StoreLayoutClient } from "@/features/stores/components";
+import { StoreLayoutClient } from "@/features/store/components";
 import { getStoreBySlug } from "@/lib/store";
-import { findStoreMember } from "@/features/stores/repositories";
+import { findStoreMember } from "@/features/store/repositories";
 
 interface StoreLayoutProps {
     children: React.ReactNode;

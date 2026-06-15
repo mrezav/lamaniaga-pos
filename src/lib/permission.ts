@@ -1,6 +1,6 @@
 import { MemberRole, MemberStatus } from "@/db/schema";
 import { PERMISSIONS, UserAction } from "@/types";
-import { findStoreMember } from "@/features/stores/repositories";
+import { findStoreMember } from "@/features/store/repositories";
 import { verifyAuth } from "./auth";
 
 // Fungsi untuk melakukan check user login, verifikasi member dan hak akses

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { StoreForm } from "@/features/stores/components";
+import { StoreForm } from "@/features/store/components";
 import { Store, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { OnboardingHeader } from "@/components/shared/OnboardingHeader";

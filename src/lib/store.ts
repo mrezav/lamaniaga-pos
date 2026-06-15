@@ -1,4 +1,4 @@
-import { findStoreBySlug } from "@/features/stores/repositories";
+import { findStoreBySlug } from "@/features/store/repositories";
 import { cache } from "react";
 
 /**
