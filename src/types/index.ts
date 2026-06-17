@@ -17,6 +17,12 @@ export const PERMISSIONS = {
         delete: ["owner", "manager"],
         view: ["owner", "manager", "cashier"],
     },
+    product: {
+        create: ["owner", "manager"],
+        edit: ["owner", "manager"],
+        delete: ["owner"],
+        view: ["owner", "manager", "cashier"],
+    },
     store: {
         create: ["owner", "manager"],
         edit: ["owner", "manager"],
