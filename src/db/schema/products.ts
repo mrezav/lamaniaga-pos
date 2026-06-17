@@ -12,6 +12,7 @@ import {
     integer,
     jsonb,
     check,
+    uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { users } from "./users";
@@ -25,6 +26,7 @@ export const products = pgTable(
         id: uuid().defaultRandom().primaryKey().notNull(),
         categoryId: uuid("category_id"),
         name: text().notNull(),
+        merk: text().notNull(),
         slug: text().notNull(),
         description: text(),
         imageUrl: text("image_url"),
@@ -69,7 +71,11 @@ export const products = pgTable(
         }),
 
         // Catatan Unik: Idealnya slug unik per toko: unique().on(table.storeId, table.slug)
-        unique("products_slug_key").on(table.storeId, table.slug),
+        // unique("products_slug_key").on(table.storeId, table.slug),
+        // Menggunakan Partial Index - Aman untuk Soft Delete
+        uniqueIndex("products_store_slug_partial_idx")
+            .on(table.storeId, table.slug)
+            .where(sql`deleted_at IS NULL`),
         index("products_store_id_idx").on(table.storeId),
         index("products_category_id_idx").on(table.categoryId),
     ],
@@ -84,7 +90,14 @@ export const productVariants = pgTable(
         sku: text(),
         price: numeric({ precision: 15, scale: 2 }).default("0").notNull(),
         stock: integer().default(0).notNull(),
-        attributes: jsonb().default({}).notNull(),
+        unit: text("unit").notNull().default("pcs"),
+        // attributes: jsonb().default({}).notNull(),
+        // Menentikan properti ini hanya dimiliki oleh sebagian kecil produk, dan jika nilainya berbeda, ia berpotensi mengubah harga atau stok seperti (ukuran dan warna)
+        attributes: jsonb("attributes")
+            .$type<Record<string, string | number | boolean>>()
+            .default({})
+            .notNull(),
+        imageUrl: text("image_url"),
 
         // Menyuntikkan kolom Audit Trail baru yang ditarik dari standardisasi kita
         createdAt: timestamp("created_at", {
@@ -143,4 +156,6 @@ export const productVariants = pgTable(
 );
 
 export type ProductRow = typeof products.$inferSelect;
+export type NewProductInput = Omit<typeof products.$inferInsert, "id">;
 export type ProductVariantRow = typeof productVariants.$inferSelect;
+export type NewVariantInput = Omit<typeof productVariants.$inferInsert, "id">;

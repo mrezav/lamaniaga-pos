@@ -18,7 +18,8 @@ import {
     User,
     Copy,
     Check,
-    LayoutGrid,
+    UsersRound,
+    PackageIcon,
 } from "lucide-react";
 import { ProfileRow, StoreMemberRow, StoreRow } from "@/db/schema";
 
@@ -78,13 +79,18 @@ export function StoreLayoutClient({
             href: `/stores/${store.slug}/categories`,
             icon: Boxes,
         },
+        {
+            name: "Produk",
+            href: `/stores/${store.slug}/products`,
+            icon: PackageIcon,
+        },
     ];
 
     if (storeMember && storeMember?.role == "owner") {
         menuItems.push({
             name: "Member Toko",
             href: `/stores/${store.slug}/store-member`,
-            icon: QrCode,
+            icon: UsersRound,
         });
     }
 

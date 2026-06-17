@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useCategories } from "../hooks/use-categories";
+import Link from "next/link";
+import { useProducts } from "@/features/product/hooks/use-products";
 import { useDebounce } from "@/hooks/use-debounce";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
     Table,
     TableBody,
@@ -11,8 +14,6 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
     Select,
     SelectContent,
@@ -20,85 +21,55 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import {
-    Loader2,
-    ChevronLeft,
-    ChevronRight,
-    Search,
-    Plus,
-    Edit2,
-    Delete,
-    Trash2,
-} from "lucide-react";
-import Link from "next/link";
-import { useCategoryMutations } from "../hooks/use-category-mutation";
-import { redirect } from "next/navigation";
+import { Loader2, Search, Plus, Ghost, Edit2, Trash2 } from "lucide-react";
 
-export function CategoryTable({ storeSlug }: { storeSlug: string }) {
+interface ProductTableProps {
+    storeSlug: string;
+}
+
+export function ProductTable({ storeSlug }: ProductTableProps) {
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(5);
+    const [limit, setLimit] = useState(10);
     const [sort, setSort] = useState("createdAt-desc");
-    const { deleteCategory, isDeleting } = useCategoryMutations(storeSlug);
-
-    async function handleDelete(id: string) {
-        const isConfimed = confirm(`Apakah anda yakin?`);
-        if (isConfimed) {
-            await deleteCategory(id);
-        }
-    }
-
-    async function handleEdit(id: string) {
-        // await checkPermission("1", "membership", "edit");
-        redirect(`/stores/${storeSlug}/categories/${id}/edit`);
-    }
-
-    // Debounce pencarian agar tidak membebani database
     const debouncedSearch = useDebounce(search, 400);
     const [sortBy, sortOrder] = sort.split("-") as [
         "name" | "createdAt",
         "asc" | "desc",
     ];
 
-    // Ambil data menggunakan Hook React Query
-    const { data, isLoading } = useCategories({
+    const { data, isLoading } = useProducts({
         storeSlug,
         search: debouncedSearch,
         page,
-        limit,
+        limit: 10,
         sortBy,
         sortOrder,
-    }).getCategoriesQuery;
+    });
 
-    // Ekstrak data dengan fallback nilai default yang aman agar TIDAK EROR saat ganti halaman
     const items = data?.items ?? [];
     const pagination = data?.pagination ?? {
         page: 1,
-        totalPages: 1,
+        limit: 10,
         totalItems: 0,
+        totalPages: 1,
     };
 
     function numberList(index: number) {
         return limit * (page - 1) + (index + 1);
     }
 
+    function handleDetail(id) {
+        console.log(id);
+    }
+
     return (
         <div className="space-y-4 w-full">
-            {/* <div className="p-4 bg-zinc-950 text-emerald-400 font-mono text-xs rounded border mb-4">
-                <p className="font-bold border-b border-zinc-800 pb-1 mb-2 text-zinc-400">
-                    🐞 DEBUG HOOK RETURN:
-                </p>
-                {isLoading
-                    ? "Loading data dari hook..."
-                    : JSON.stringify(data, null, 2)}
-            </div> */}
-            {/* FILTER & SORT PANEL */}
-            {/* PANEL KONTROL: SEARCH & FILTER ONLY */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-between items-center w-full">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="relative w-full sm:w-80">
                     <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
                     <Input
-                        placeholder="Cari nama kategori..."
+                        placeholder="Cari nama produk..."
                         value={search}
                         onChange={(e) => {
                             setSearch(e.target.value);
@@ -108,31 +79,41 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
                     />
                 </div>
 
-                <div className="w-full sm:w-auto flex justify-end">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <Select
                         value={sort}
-                        onValueChange={(v) => {
-                            setSort(v);
+                        onValueChange={(value) => {
+                            setSort(value);
                             setPage(1);
                         }}
                     >
-                        <SelectTrigger className="w-full sm:w-44 h-11 rounded-xl border-slate-200 focus-visible:ring-slate-400 bg-slate-50/30">
+                        <SelectTrigger className="w-full sm:w-48 h-11 rounded-xl border-slate-200 focus-visible:ring-slate-400 bg-slate-50/30">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
                             <SelectItem value="createdAt-desc">
-                                Urutkan: Terbaru
+                                Terbaru
                             </SelectItem>
-                            <SelectItem value="name-asc">
-                                Urutkan: Nama (A-Z)
+                            <SelectItem value="createdAt-asc">
+                                Terlama
                             </SelectItem>
+                            <SelectItem value="name-asc">Nama A-Z</SelectItem>
+                            <SelectItem value="name-desc">Nama Z-A</SelectItem>
                         </SelectContent>
                     </Select>
+                    <Button
+                        asChild
+                        className="rounded-xl h-11 px-5 bg-slate-900 hover:bg-slate-800 text-white shadow-sm font-medium"
+                    >
+                        <Link href={`/stores/${storeSlug}/products/create`}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Tambah Produk
+                        </Link>
+                    </Button>
                 </div>
             </div>
 
-            {/* DATA TABLE */}
-            <div className="border rounded-md bg-card min-h-[200px] flex flex-col justify-between">
+            <div className="border rounded-md bg-card min-h-50 flex flex-col justify-between">
                 {isLoading ? (
                     <div className="flex flex-1 items-center justify-center p-8">
                         <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -142,9 +123,11 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>No</TableHead>
-                                <TableHead>Nama Kategori</TableHead>
+                                <TableHead>Nama</TableHead>
+                                <TableHead>Merk</TableHead>
                                 <TableHead>Slug</TableHead>
-                                <TableHead>Deskripsi</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Created</TableHead>
                                 <TableHead>Aksi</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -152,63 +135,55 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
                             {items.length === 0 ? (
                                 <TableRow>
                                     <TableCell
-                                        colSpan={3}
+                                        colSpan={5}
                                         className="text-center py-8 text-muted-foreground"
                                     >
-                                        Tidak ada kategori ditemukan.
+                                        Tidak ada produk ditemukan.
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                items.map((cat, index) => (
-                                    <TableRow key={cat.id}>
+                                items.map((product, index) => (
+                                    <TableRow
+                                        key={product.id}
+                                        onClick={() => handleDetail(product.id)}
+                                    >
                                         <TableCell>
                                             {numberList(index)}
                                         </TableCell>
                                         <TableCell className="font-medium">
-                                            {cat.name}
+                                            {product.name}
                                         </TableCell>
+                                        <TableCell>{product.merk}</TableCell>
                                         <TableCell className="font-mono text-xs">
-                                            {cat.slug}
+                                            {product.merk}
                                         </TableCell>
-                                        <TableCell className="text-muted-foreground">
-                                            {cat.description || "-"}
+                                        <TableCell>
+                                            {product.isActive
+                                                ? "Aktif"
+                                                : "Nonaktif"}
+                                        </TableCell>
+                                        <TableCell>
+                                            {product.createdAt &&
+                                                new Date(
+                                                    product.createdAt,
+                                                ).toLocaleDateString()}
                                         </TableCell>
                                         <TableCell>
                                             <Button
-                                                onClick={() =>
-                                                    handleEdit(cat.id)
-                                                }
+                                                className="rounded-lg bg-amber-400 hover:bg-amber-500 text-white"
                                                 variant="ghost"
                                                 size="sm"
-                                                className="rounded-lg bg-amber-400 hover:bg-amber-500 text-white"
                                             >
-                                                {/* <Link
-                                                    href={`/stores/${storeSlug}/categories/${cat.id}/edit`}
-                                                > */}
                                                 <Edit2 className="h-4 w-4 mr-2" />
                                                 Ubah
-                                                {/* </Link> */}
                                             </Button>
                                             <Button
+                                                className="rounded-lg bg-pink-600 hover:bg-pink-700 text-white"
                                                 variant="ghost"
                                                 size="sm"
-                                                className="rounded-lg bg-pink-600 hover:bg-pink-700 text-white"
-                                                disabled={isDeleting}
-                                                onClick={() =>
-                                                    handleDelete(cat.id)
-                                                }
                                             >
-                                                {isDeleting ? (
-                                                    <>
-                                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                                        Menghapus...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Trash2 className="h-4 w-4 mr-2" />
-                                                        Hapus
-                                                    </>
-                                                )}
+                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                Hapus
                                             </Button>
                                         </TableCell>
                                     </TableRow>
@@ -218,19 +193,18 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
                     </Table>
                 )}
 
-                {/* PAGINATION CONTROLS */}
                 <div className="flex items-center justify-between p-4 border-t bg-muted/20">
                     <span className="text-xs text-muted-foreground">
-                        Total: {pagination.totalItems} data
+                        Total: {pagination.totalItems} produk
                     </span>
                     <div className="flex items-center space-x-2">
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setPage((p) => p - 1)}
+                            onClick={() => setPage((p) => Math.max(1, p - 1))}
                             disabled={page <= 1 || isLoading}
                         >
-                            <ChevronLeft className="h-4 w-4" />
+                            Sebelumnya
                         </Button>
                         <span className="text-xs font-medium">
                             Hal {pagination.page} / {pagination.totalPages}
@@ -238,12 +212,16 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setPage((p) => p + 1)}
+                            onClick={() =>
+                                setPage((p) =>
+                                    Math.min(pagination.totalPages, p + 1),
+                                )
+                            }
                             disabled={
                                 page >= pagination.totalPages || isLoading
                             }
                         >
-                            <ChevronRight className="h-4 w-4" />
+                            Berikutnya
                         </Button>
                     </div>
                 </div>
