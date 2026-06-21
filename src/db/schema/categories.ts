@@ -12,6 +12,8 @@ import { sql } from "drizzle-orm";
 import { stores } from "./stores";
 import { users } from "./users";
 
+export const DEFAULT_CATEGORY_ID = "00000000-0000-0000-0000-000000000000";
+
 export const categories = pgTable(
     "categories",
     {
@@ -46,6 +48,11 @@ export const categories = pgTable(
         // Tapi jika slug hanya boleh unik per toko, ganti menjadi: unique().on(table.storeId, table.slug)
         unique("categories_slug_key").on(table.storeId, table.slug),
         index("categories_store_id_idx").on(table.storeId),
+        // ⚡ INDEKS GIN UNTUK KATEGORI (KARENA BERBEDA TABEL)
+        index("categories_fts_idx").using(
+            "gin",
+            sql`to_tsvector('indonesian', ${table.name})`,
+        ),
 
         // Pola fungsi pembantu (owned_store_ids()) ini sudah sangat bagus dan bersih!
         pgPolicy("Manage own categories", {

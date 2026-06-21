@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -11,69 +11,83 @@ import {
     ProductInput,
     productSchema,
 } from "@/features/product/schemas/product-schema";
-import { useCreateProduct } from "@/features/product/hooks/use-create-product";
-import { uploadProductImage } from "@/features/product/utils/upload-image";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useCategories } from "@/features/category/hooks/use-categories";
+import { useProductMutations } from "../hooks/use-product-mutations";
+import ProductVariantsForm from "./product-variant-form";
 
 interface CreateProductFormProps {
     storeSlug: string;
 }
 
+// Asumsi kondisi awal untuk variants tunggal / default
+const defaultVariantValue = [
+    {
+        sku: "",
+        price: 0,
+        stock: 0,
+        unit: "pcs",
+        size: "",
+        color: "",
+    },
+];
+
 export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
     const router = useRouter();
-    // const [categories, setCategories] = useState<
-    //     { id: string; name: string }[]
-    // >([]);
     const [imagePreview, setImagePreview] = useState<string>("");
-    const [isUploading, setIsUploading] = useState(false);
-    const { mutateAsync, isPending } = useCreateProduct(storeSlug);
+    const { createProduct, isCreating } = useProductMutations(storeSlug);
 
-    const form = useForm<ProductInput>({
+    const {
+        register,
+        handleSubmit,
+        reset,
+        setError,
+        watch,
+        setValue,
+        getValues,
+        control,
+        formState: { errors },
+    } = useForm<ProductInput>({
         resolver: zodResolver(productSchema),
         defaultValues: {
             name: "",
             merk: "",
-            categoryId: null,
+            categoryId: "",
             description: "",
             imageUrl: "",
+            imageFile: null,
             isActive: true,
             hasVariants: false,
-            variants: [
-                {
-                    sku: "",
-                    price: 0,
-                    stock: 0,
-                    unit: "pcs",
-                    size: "",
-                    color: "",
-                },
-            ],
+            variants: defaultVariantValue,
         },
     });
 
-    const { fields, append, remove } = useFieldArray({
-        control: form.control,
+    const { fields, append, remove, replace } = useFieldArray({
+        control: control,
         name: "variants",
     });
 
-    const [sort, setSort] = useState("createdAt-desc");
-    const [sortBy, sortOrder] = sort.split("-") as [
-        "name" | "createdAt",
-        "asc" | "desc",
-    ];
+    const hasVariants = watch("hasVariants");
+    // const watchVariants = watch("variants");
+
+    // Efek untuk reset data variants ketika switch hasVariants dimatikan (false)
+    useEffect(() => {
+        if (!hasVariants) {
+            // replace(defaultVariantValue);
+            reset({
+                ...getValues(),
+                variants: defaultVariantValue,
+            });
+        }
+    }, [hasVariants, replace]);
+
     const { getCategoryListQuery } = useCategories({
         storeSlug,
-        sortBy,
-        sortOrder,
     });
-    const {
-        data: categoryListData, // Mengubah properti 'data' menjadi 'categoryListData'
-        isLoading: isLoadingCategory, // Mengubah 'isLoading' menjadi 'isLoadingCategory'
-        isError: isErrorCategory, // Mengubah 'isError' menjadi 'isErrorCategory'
-        error: errorCategory, // Mengubah 'error' menjadi 'errorCategory'
-    } = getCategoryListQuery;
+
+    const { data: categoryListData, error: errorCategory } =
+        getCategoryListQuery;
 
     async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -86,30 +100,48 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
 
         const preview = URL.createObjectURL(file);
         setImagePreview(preview);
-        form.setValue("imageFile", file);
+        setValue("imageFile", file);
     }
 
     async function onSubmit(values: ProductInput) {
         try {
-            let imageUrl = values.imageUrl;
+            const formData = new FormData();
+            formData.append("name", values.name);
+            formData.append("merk", values.merk);
+            formData.append(
+                "categoryId",
+                values.categoryId ? String(values.categoryId) : "",
+            );
+            formData.append("description", values.description ?? "");
+            formData.append("isActive", String(values.isActive));
+            formData.append("hasVariants", String(values.hasVariants));
+            formData.append("variants", JSON.stringify(values.variants));
 
-            if (values.imageFile && values.imageFile instanceof File) {
-                setIsUploading(true);
-                imageUrl = await uploadProductImage(values.imageFile);
-                setIsUploading(false);
+            if (values.imageFile instanceof File) {
+                formData.append("imageFile", values.imageFile);
             }
 
-            const submitData = {
-                ...values,
-                imageUrl,
-                imageFile: null,
-            };
+            const response = await createProduct(formData);
 
-            const response = await mutateAsync(submitData);
-            if (response.success) {
-                toast.success("Produk berhasil dibuat!");
-                router.push(`/stores/${storeSlug}/products`);
+            if (response && !response.success && response.validationErrors) {
+                Object.entries(response.validationErrors).forEach(
+                    ([field, messages]) => {
+                        if (messages && messages.length > 0) {
+                            setError(field as keyof ProductInput, {
+                                type: "server",
+                                message: messages[0],
+                            });
+                        }
+                    },
+                );
+                toast.error("Validasi Gagal", {
+                    description: "Silahkan periksa kembali input anda",
+                });
+                return;
             }
+
+            toast.success("Produk berhasil dibuat!");
+            router.push(`/stores/${storeSlug}/products`);
         } catch (error) {
             console.error(error);
             toast.error(
@@ -120,76 +152,81 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
         }
     }
 
-    const hasVariants = form.watch("hasVariants");
-
     return (
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 gap-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mx-auto">
+            {/* INPUT UTAMA PRODUK */}
+            <div className="grid grid-cols-1 gap-6 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                 <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">
                         Nama Produk
                     </label>
-                    <Input {...form.register("name")} />
-                    {form.formState.errors.name && (
+                    <Input
+                        {...register("name")}
+                        className="focus-visible:ring-teal-500"
+                    />
+                    {errors.name && (
                         <p className="text-xs text-red-500">
-                            {form.formState.errors.name.message}
+                            {errors.name.message}
                         </p>
                     )}
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700">
-                        Merk
-                    </label>
-                    <Input {...form.register("merk")} />
-                    {form.formState.errors.merk && (
-                        <p className="text-xs text-red-500">
-                            {form.formState.errors.merk.message}
-                        </p>
-                    )}
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-slate-700">
+                            Merk
+                        </label>
+                        <Input
+                            {...register("merk")}
+                            className="focus-visible:ring-teal-500"
+                        />
+                        {errors.merk && (
+                            <p className="text-xs text-red-500">
+                                {errors.merk.message}
+                            </p>
+                        )}
+                    </div>
 
-                <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700">
-                        Kategori{" "}
-                        {
-                            <span className="text-xs font-bold text-red-600 ml-4">
-                                {errorCategory?.message}
-                            </span>
-                        }
-                    </label>
-                    <select
-                        className="w-full rounded-lg border border-slate-200 px-3 py-2"
-                        {...form.register("categoryId")}
-                    >
-                        <option value="" aria-readonly>
-                            Pilih Kategori
-                        </option>
-                        {categoryListData ? (
-                            categoryListData.map((category) => (
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-slate-700 flex items-center justify-between">
+                            <span>Kategori</span>
+                            {errorCategory && (
+                                <span className="text-xs font-bold text-red-600">
+                                    {errorCategory.message}
+                                </span>
+                            )}
+                        </label>
+                        <select
+                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                            {...register("categoryId")}
+                        >
+                            <option value="">Pilih Kategori</option>
+                            {categoryListData?.map((category) => (
                                 <option key={category.id} value={category.id}>
                                     {category.name}
                                 </option>
-                            ))
-                        ) : (
-                            <option>-</option>
+                            ))}
+                        </select>
+                        {errors.categoryId && (
+                            <p className="text-xs text-red-500">
+                                {errors.categoryId.message}
+                            </p>
                         )}
-                    </select>
-                    {form.formState.errors.categoryId && (
-                        <p className="text-xs text-red-500">
-                            {form.formState.errors.categoryId.message}
-                        </p>
-                    )}
+                    </div>
                 </div>
 
                 <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">
                         Deskripsi
                     </label>
-                    <Textarea {...form.register("description")} rows={4} />
-                    {form.formState.errors.description && (
+                    <Textarea
+                        {...register("description")}
+                        rows={4}
+                        className="focus-visible:ring-teal-500"
+                    />
+                    {errors.description && (
                         <p className="text-xs text-red-500">
-                            {form.formState.errors.description.message}
+                            {errors.description.message}
                         </p>
                     )}
                 </div>
@@ -198,15 +235,15 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
                     <label className="text-sm font-semibold text-slate-700">
                         Gambar Produk (Maksimal 5MB)
                     </label>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <input
                             type="file"
                             accept="image/jpeg,image/png,image/webp,image/gif"
                             onChange={handleImageChange}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm bg-slate-50 cursor-pointer file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition w-full sm:w-auto"
                         />
                         {imagePreview && (
-                            <div className="relative w-32 h-32 rounded-lg border border-slate-200 overflow-hidden">
+                            <div className="relative w-24 h-24 rounded-xl border-2 border-dashed border-teal-200 overflow-hidden bg-slate-50 flex-shrink-0">
                                 <img
                                     src={imagePreview}
                                     alt="Preview"
@@ -215,221 +252,144 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
                             </div>
                         )}
                     </div>
-                    {form.formState.errors.imageFile && (
+                    {errors.imageFile && (
                         <p className="text-xs text-red-500">
-                            {form.formState.errors.imageFile?.message as string}
+                            {errors.imageFile?.message as string}
                         </p>
                     )}
                 </div>
             </div>
 
-            <div className="flex items-center gap-3">
-                <input
-                    type="checkbox"
-                    {...form.register("hasVariants")}
-                    className="h-4 w-4"
-                />
-                <label className="text-sm font-medium text-slate-700">
-                    Produk ini memiliki varian (ukuran, warna, dll)
+            {/* SEKSI PILIHAN VARIAN (SWITCH) */}
+            <div className="flex items-center justify-between bg-teal-50/50 p-4 rounded-2xl border border-teal-100">
+                <div className="space-y-0.5">
+                    <label
+                        htmlFor="hasVariants"
+                        className="text-sm font-semibold text-slate-800 cursor-pointer"
+                    >
+                        Varian Produk
+                    </label>
+                    <p className="text-xs text-slate-500">
+                        Aktifkan jika produk ini memiliki variasi seperti ukuran
+                        atau warna.
+                    </p>
+                </div>
+                {/* Komponen Switch Cantik */}
+                <label className="relative inline-flex items-center cursor-pointer select-none">
+                    <input
+                        id="hasVariants"
+                        type="checkbox"
+                        className="sr-only peer"
+                        {...register("hasVariants")}
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
                 </label>
             </div>
 
-            <div className="space-y-4">
-                {!hasVariants && (
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {/* FORM SINGLE VARIANT (Kondisi hasVariants = FALSE) */}
+            {!hasVariants && (
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                    <p className="text-sm font-semibold text-slate-800 border-b border-slate-100 pb-2">
+                        Informasi Stok & Harga
+                    </p>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">
-                                SKU
+                            <label className="text-xs font-semibold text-slate-600">
+                                SKU (Opsional)
                             </label>
-                            <Input {...form.register("variants.0.sku")} />
-                            {form.formState.errors.variants?.[0]?.sku && (
-                                <p className="text-xs text-red-500">
-                                    {
-                                        form.formState.errors.variants?.[0]?.sku
-                                            ?.message as string
-                                    }
-                                </p>
-                            )}
+                            <Input
+                                {...register("variants.0.sku")}
+                                className="focus-visible:ring-teal-500"
+                            />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">
+                            <label className="text-xs font-semibold text-slate-600">
                                 Harga
                             </label>
                             <Input
                                 type="number"
                                 step="0.01"
-                                {...form.register("variants.0.price", {
+                                {...register("variants.0.price", {
                                     valueAsNumber: true,
                                 })}
+                                className="focus-visible:ring-teal-500"
                             />
-                            {form.formState.errors.variants?.[0]?.price && (
+                            {errors.variants?.[0]?.price && (
                                 <p className="text-xs text-red-500">
-                                    {
-                                        form.formState.errors.variants?.[0]
-                                            ?.price?.message
-                                    }
+                                    {errors.variants?.[0]?.price?.message}
                                 </p>
                             )}
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">
+                            <label className="text-xs font-semibold text-slate-600">
                                 Stok
                             </label>
                             <Input
                                 type="number"
-                                {...form.register("variants.0.stock", {
+                                {...register("variants.0.stock", {
                                     valueAsNumber: true,
                                 })}
+                                className="focus-visible:ring-teal-500"
                             />
-                            {form.formState.errors.variants?.[0]?.stock && (
+                            {errors.variants?.[0]?.stock && (
                                 <p className="text-xs text-red-500">
-                                    {
-                                        form.formState.errors.variants?.[0]
-                                            ?.stock?.message
-                                    }
+                                    {errors.variants?.[0]?.stock?.message}
                                 </p>
                             )}
                         </div>
                     </div>
-                )}
+                </div>
+            )}
 
-                {hasVariants && (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between gap-3">
-                            <p className="text-sm font-semibold text-slate-700">
-                                Varian Produk
-                            </p>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() =>
-                                    append({
-                                        sku: "",
-                                        price: 0,
-                                        stock: 0,
-                                        unit: "pcs",
-                                        size: "",
-                                        color: "",
-                                    })
-                                }
-                            >
-                                Tambah Varian
-                            </Button>
-                        </div>
-                        {fields.map((field, index) => (
-                            <div
-                                key={field.id}
-                                className="rounded-2xl border border-slate-200 p-4"
-                            >
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-700">
-                                            SKU
-                                        </label>
-                                        <Input
-                                            {...form.register(
-                                                `variants.${index}.sku` as const,
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-700">
-                                            Harga
-                                        </label>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            {...form.register(
-                                                `variants.${index}.price` as const,
-                                                { valueAsNumber: true },
-                                            )}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-3 mt-4">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-700">
-                                            Stok
-                                        </label>
-                                        <Input
-                                            type="number"
-                                            {...form.register(
-                                                `variants.${index}.stock` as const,
-                                                { valueAsNumber: true },
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-700">
-                                            Unit
-                                        </label>
-                                        <Input
-                                            {...form.register(
-                                                `variants.${index}.unit` as const,
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-700">
-                                            Ukuran
-                                        </label>
-                                        <Input
-                                            {...form.register(
-                                                `variants.${index}.size` as const,
-                                            )}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="mt-4 space-y-2">
-                                    <label className="text-sm font-semibold text-slate-700">
-                                        Warna
-                                    </label>
-                                    <Input
-                                        {...form.register(
-                                            `variants.${index}.color` as const,
-                                        )}
-                                    />
-                                </div>
-                                <div className="mt-4 flex justify-end">
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        onClick={() => remove(index)}
-                                    >
-                                        Hapus Varian
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            <div className="flex items-center gap-3">
-                <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    {...form.register("isActive")}
+            {/* FORM MULTIPLE VARIANTS (Kondisi hasVariants = TRUE) */}
+            {hasVariants && (
+                <ProductVariantsForm
+                    control={control}
+                    register={register}
+                    errors={errors}
                 />
-                <label className="text-sm font-medium text-slate-700">
-                    Produk aktif
+            )}
+
+            {/* SWITCH AKTIF / MATI PRODUK */}
+            <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-slate-100 shadow-sm w-fit">
+                <label className="relative inline-flex items-center cursor-pointer select-none">
+                    <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        {...register("isActive")}
+                    />
+                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
                 </label>
+                <span className="text-sm font-medium text-slate-700">
+                    Tampilkan produk di toko (Aktif)
+                </span>
             </div>
 
+            {/* ACTIONS BUTTON */}
             <Button
                 type="submit"
-                disabled={isPending || isUploading}
-                className="w-full"
+                disabled={isCreating}
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white h-11 rounded-xl font-medium transition shadow-sm"
             >
-                {isPending || isUploading ? (
+                {isCreating ? (
                     <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {isUploading ? "Mengunggah gambar..." : "Menyimpan..."}
+                        Menyimpan ke sistem...
                     </>
                 ) : (
-                    "Simpan Produk"
+                    "Simpan Informasi Produk"
                 )}
             </Button>
+
+            {/* LIVE PREVIEW BOX */}
+            {/* <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl mt-10">
+                <p className="text-xs font-bold text-teal-400 uppercase tracking-wider mb-2">
+                    ⚡ Live Preview State Array:
+                </p>
+                <pre className="text-xs font-mono text-slate-300 bg-slate-950/60 p-4 rounded-xl overflow-x-auto max-h-64 border border-slate-800/50">
+                    {JSON.stringify(watchVariants, null, 2)}
+                </pre>
+            </div> */}
         </form>
     );
 }

@@ -25,14 +25,14 @@ import {
     ChevronLeft,
     ChevronRight,
     Search,
-    Plus,
     Edit2,
-    Delete,
     Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import { useCategoryMutations } from "../hooks/use-category-mutation";
 import { redirect } from "next/navigation";
+import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
+import { getErrorMessage } from "@/lib/utils";
 
 export function CategoryTable({ storeSlug }: { storeSlug: string }) {
     const [search, setSearch] = useState("");
@@ -42,9 +42,10 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
     const { deleteCategory, isDeleting } = useCategoryMutations(storeSlug);
 
     async function handleDelete(id: string) {
-        const isConfimed = confirm(`Apakah anda yakin?`);
-        if (isConfimed) {
+        try {
             await deleteCategory(id);
+        } catch (err) {
+            console.error("Error delete category :", getErrorMessage(err));
         }
     }
 
@@ -84,16 +85,6 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
 
     return (
         <div className="space-y-4 w-full">
-            {/* <div className="p-4 bg-zinc-950 text-emerald-400 font-mono text-xs rounded border mb-4">
-                <p className="font-bold border-b border-zinc-800 pb-1 mb-2 text-zinc-400">
-                    🐞 DEBUG HOOK RETURN:
-                </p>
-                {isLoading
-                    ? "Loading data dari hook..."
-                    : JSON.stringify(data, null, 2)}
-            </div> */}
-            {/* FILTER & SORT PANEL */}
-            {/* PANEL KONTROL: SEARCH & FILTER ONLY */}
             <div className="flex flex-col sm:flex-row gap-3 justify-between items-center w-full">
                 <div className="relative w-full sm:w-80">
                     <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
@@ -180,7 +171,7 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
                                                 }
                                                 variant="ghost"
                                                 size="sm"
-                                                className="rounded-lg bg-amber-400 hover:bg-amber-500 text-white"
+                                                className="rounded-lg bg-amber-400 hover:bg-amber-500 hover:cursor-pointer text-white"
                                             >
                                                 {/* <Link
                                                     href={`/stores/${storeSlug}/categories/${cat.id}/edit`}
@@ -189,27 +180,24 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
                                                 Ubah
                                                 {/* </Link> */}
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="rounded-lg bg-pink-600 hover:bg-pink-700 text-white"
-                                                disabled={isDeleting}
-                                                onClick={() =>
+                                            <DeleteConfirmDialog
+                                                onConfirm={() =>
                                                     handleDelete(cat.id)
                                                 }
-                                            >
-                                                {isDeleting ? (
-                                                    <>
-                                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                                        Menghapus...
-                                                    </>
-                                                ) : (
-                                                    <>
+                                                isDeleting={isDeleting}
+                                                title="Apakah anda yakin menghapus kategori"
+                                                description="Semua produk di dalamnya menjadi tanpa kategori"
+                                                triggerButton={
+                                                    <Button
+                                                        className="rounded-lg bg-pink-600 hover:bg-pink-700 hover:cursor-pointer text-white"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                    >
                                                         <Trash2 className="h-4 w-4 mr-2" />
                                                         Hapus
-                                                    </>
-                                                )}
-                                            </Button>
+                                                    </Button>
+                                                }
+                                            />
                                         </TableCell>
                                     </TableRow>
                                 ))

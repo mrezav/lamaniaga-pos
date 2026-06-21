@@ -78,6 +78,11 @@ export const products = pgTable(
             .where(sql`deleted_at IS NULL`),
         index("products_store_id_idx").on(table.storeId),
         index("products_category_id_idx").on(table.categoryId),
+        // ⚡ INDEKS GIN UNTUK FULL-TEXT SEARCH
+        index("products_fts_idx").using(
+            "gin",
+            sql`to_tsvector('indonesian', ${table.name} || ' ' || COALESCE(${table.merk}, ''))`,
+        ),
     ],
 );
 

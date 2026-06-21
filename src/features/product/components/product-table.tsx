@@ -21,7 +21,22 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Search, Plus, Ghost, Edit2, Trash2 } from "lucide-react";
+import { Loader2, Search, Plus, Edit2, Trash2 } from "lucide-react";
+import { redirect } from "next/navigation";
+import { useProductMutations } from "../hooks/use-product-mutations";
+import { toast } from "sonner";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
+import { getErrorMessage } from "@/lib/utils";
 
 interface ProductTableProps {
     storeSlug: string;
@@ -59,7 +74,21 @@ export function ProductTable({ storeSlug }: ProductTableProps) {
         return limit * (page - 1) + (index + 1);
     }
 
-    function handleDetail(id) {
+    function handleEdit(id: string) {
+        redirect(`/stores/${storeSlug}/products/${id}/edit`);
+    }
+
+    const { deleteProduct, isDeleting } = useProductMutations(storeSlug);
+
+    async function handleDelete(id: string) {
+        try {
+            await deleteProduct(id);
+        } catch (err) {
+            console.log("Error delete : ", getErrorMessage(err));
+        }
+    }
+
+    function handleDetail(id: string) {
         console.log(id);
     }
 
@@ -125,9 +154,9 @@ export function ProductTable({ storeSlug }: ProductTableProps) {
                                 <TableHead>No</TableHead>
                                 <TableHead>Nama</TableHead>
                                 <TableHead>Merk</TableHead>
-                                <TableHead>Slug</TableHead>
+                                <TableHead>Kategori</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead>Created</TableHead>
+                                <TableHead>Dibuat</TableHead>
                                 <TableHead>Aksi</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -154,8 +183,8 @@ export function ProductTable({ storeSlug }: ProductTableProps) {
                                             {product.name}
                                         </TableCell>
                                         <TableCell>{product.merk}</TableCell>
-                                        <TableCell className="font-mono text-xs">
-                                            {product.merk}
+                                        <TableCell>
+                                            {product.categoryName}
                                         </TableCell>
                                         <TableCell>
                                             {product.isActive
@@ -170,21 +199,34 @@ export function ProductTable({ storeSlug }: ProductTableProps) {
                                         </TableCell>
                                         <TableCell>
                                             <Button
-                                                className="rounded-lg bg-amber-400 hover:bg-amber-500 text-white"
+                                                className="rounded-lg bg-amber-400 hover:bg-amber-500 hover:cursor-pointer text-white"
                                                 variant="ghost"
                                                 size="sm"
+                                                onClick={() =>
+                                                    handleEdit(product.id)
+                                                }
                                             >
                                                 <Edit2 className="h-4 w-4 mr-2" />
                                                 Ubah
                                             </Button>
-                                            <Button
-                                                className="rounded-lg bg-pink-600 hover:bg-pink-700 text-white"
-                                                variant="ghost"
-                                                size="sm"
-                                            >
-                                                <Trash2 className="h-4 w-4 mr-2" />
-                                                Hapus
-                                            </Button>
+                                            <DeleteConfirmDialog
+                                                isDeleting={isDeleting}
+                                                onConfirm={() =>
+                                                    handleDelete(product.id)
+                                                }
+                                                triggerButton={
+                                                    <Button
+                                                        className="rounded-lg bg-pink-600 hover:bg-pink-700 hover:cursor-pointer text-white"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                    >
+                                                        <Trash2 className="h-4 w-4 mr-2" />
+                                                        Hapus
+                                                    </Button>
+                                                }
+                                                title="Apakah anda yakin menghapus produk ini?"
+                                                description="Semua varian produk akan ikut terhapus"
+                                            />
                                         </TableCell>
                                     </TableRow>
                                 ))

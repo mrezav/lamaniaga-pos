@@ -7,8 +7,8 @@ interface useCategoriesProps {
     search?: string;
     page?: number;
     limit?: number;
-    sortBy: "name" | "createdAt";
-    sortOrder: "asc" | "desc";
+    sortBy?: "name" | "createdAt";
+    sortOrder?: "asc" | "desc";
 }
 
 export const useCategories = (filters: useCategoriesProps) => {
