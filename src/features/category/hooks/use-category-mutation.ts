@@ -68,15 +68,18 @@ export const useCategoryMutations = (
             }
             return response;
         },
-        onSuccess: () => {
+        onSuccess: (response) => {
+            if (response.data) {
+                toast.success(
+                    `Berhasil menghapus kategori : ${response.data.name}`,
+                );
+            }
             // Invalidasi cache daftar kategori
             queryClient.invalidateQueries({
                 queryKey: ["categories", storeSlug],
             });
         },
-        onError: (error) => {
-            toast.error(error.message);
-        },
+        onError: (error) => toast.error(error.message),
     });
 
     return {

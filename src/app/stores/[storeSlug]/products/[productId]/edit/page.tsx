@@ -1,33 +1,41 @@
-import { CreateProductForm } from "@/features/product/components/create-product-form";
-import { getStoreBySlug } from "@/lib/store";
+import getProductByIdAction from "@/features/product/actions/get-product";
+import { EditProductForm } from "@/features/product/components/edit-product-form";
+import { editProductSchema } from "@/features/product/schemas/product-schema";
+import { UserAction } from "@/types";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-interface CreateProductPageProps {
-    params: Promise<{ storeSlug: string }>;
+interface EditProductPageProps {
+    params: Promise<{ storeSlug: string; productId: string }>;
 }
 
 export default async function CreateProductPage({
     params,
-}: CreateProductPageProps) {
-    const { storeSlug } = await params;
-    const store = await getStoreBySlug(storeSlug);
+}: EditProductPageProps) {
+    const { storeSlug, productId } = await params;
 
-    if (!store) {
+    const { success, error, data } = await getProductByIdAction(
+        storeSlug,
+        productId,
+        UserAction.EDIT,
+    );
+    if (!success) {
         notFound();
     }
+
+    const initialData = editProductSchema.parse(data);
 
     return (
         <div className="bg-white p-8 md:p-12 rounded-[2rem] border border-slate-200/60 shadow-sm flex flex-col min-h-105 space-y-6 w-full">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-5">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                        Tambah Produk
+                        Edit Produk
                     </h1>
                     <p className="text-sm text-slate-500 mt-1">
-                        Tambahkan produk baru untuk toko Anda. Pilih single
-                        product atau varian produk.
+                        Edit produk untuk toko Anda. Pilih single product atau
+                        varian produk.
                     </p>
                 </div>
                 <Link
@@ -39,7 +47,11 @@ export default async function CreateProductPage({
                 </Link>
             </div>
             <div className="w-full">
-                <CreateProductForm storeSlug={storeSlug} />
+                <EditProductForm
+                    storeSlug={storeSlug}
+                    productId={productId}
+                    initialData={initialData}
+                />
             </div>
         </div>
     );

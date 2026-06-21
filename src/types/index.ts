@@ -39,3 +39,4 @@ export const UserAction = {
     VIEW: "view",
 } as const;
 export type UserAction = (typeof UserAction)[keyof typeof UserAction];
+// Ambil value dengan cara UserAction.CREATE

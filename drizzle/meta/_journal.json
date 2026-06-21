@@ -57,6 +57,13 @@
       "when": 1781577745719,
       "tag": "0007_rich_sentry",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1781685025552,
+      "tag": "0008_bitter_reavers",
+      "breakpoints": true
     }
   ]
 }
