@@ -182,15 +182,15 @@ export async function setActiveStoreAction(storeId: string) {
             ),
         });
 
-        const isOwner = store.ownerId === user.id;
-        const isStaff = !!memberRecord;
+        // const isOwner = store.ownerId === user.id;
+        // const isStaff = !!memberRecord;
 
-        if (!isOwner && !isStaff) {
-            return {
-                success: false,
-                error: "Anda bukan anggota toko ini",
-            };
-        }
+        // if (!isOwner && !isStaff) {
+        //     return {
+        //         success: false,
+        //         error: "Anda bukan anggota toko ini",
+        //     };
+        // }
 
         await db
             .update(profiles)
