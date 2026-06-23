@@ -36,6 +36,34 @@
       "when": 1779175319394,
       "tag": "0004_violet_kang",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780890455309,
+      "tag": "0005_careful_sage",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781517682796,
+      "tag": "0006_opposite_mandrill",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781577745719,
+      "tag": "0007_rich_sentry",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1781685025552,
+      "tag": "0008_bitter_reavers",
+      "breakpoints": true
     }
   ]
 }
