@@ -4,37 +4,52 @@ import { db } from "@/db";
 import { profiles } from "@/db/schema";
 
 export async function GET(request: Request) {
-    const { searchParams, origin } = new URL(request.url);
+    const { searchParams } = new URL(request.url);
     const code = searchParams.get("code");
 
-    // Hanya terima query ?code= dari Supabase setelah klik link verifikasi
+    // Gunakan ENV domain yang pasti aman untuk live & lokal
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
     if (!code) {
-        return NextResponse.redirect(`${origin}/login?error=auth_code_error`);
+        return NextResponse.redirect(`${baseUrl}/login?error=auth_code_error`);
     }
 
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    // Gagal tukar code → tidak ada session → arahkan ke login
     if (error || !data.user) {
         console.error("Auth callback error:", error);
-        return NextResponse.redirect(`${origin}/login?error=auth_code_error`);
+        return NextResponse.redirect(`${baseUrl}/login?error=auth_code_error`);
     }
 
-    // Session sudah tersimpan (cookie di-set oleh Supabase SSR client)
+    // Ambil metadata sebelum masuk ke proses async database
+    const fullName = data.user.user_metadata?.full_name ?? "User";
+    const userId = data.user.id;
+
     try {
-        const fullName = data.user.user_metadata?.full_name ?? "User";
-        await db
-            .insert(profiles)
-            .values({
-                id: data.user.id,
-                fullName,
-            })
-            .onConflictDoNothing({ target: profiles.id });
+        // Bungkus dengan Promise agar runtime serverless benar-benar menunggu operasi database selesai
+        await new Promise<void>(async (resolve, reject) => {
+            try {
+                await db
+                    .insert(profiles)
+                    .values({
+                        id: userId,
+                        fullName: fullName,
+                    })
+                    .onConflictDoNothing({ target: profiles.id });
+
+                resolve();
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+        console.log("Profile successfully created for user:", userId);
     } catch (dbError) {
-        // Profil gagal dibuat, tetap lanjut ke /stores — user bisa onboarding ulang
-        console.error("Profile insertion error:", dbError);
+        // Jika memang DB error (misal skema tidak cocok/connection timeout), sekarang PASTI tercatat di Vercel Logs
+        console.error("Profile insertion error in live:", dbError);
     }
 
-    return NextResponse.redirect(`${origin}/stores`);
+    // Baris ini baru boleh dieksekusi SETELAH Promise database di atas resolve/reject selesai.
+    return NextResponse.redirect(`${baseUrl}/stores`);
 }
