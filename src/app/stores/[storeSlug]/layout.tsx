@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { StoreLayoutClient } from "@/features/store/components";
 import { getStoreBySlug } from "@/lib/store";
 import { findStoreMember } from "@/features/store/repositories";
+import { headers } from "next/headers";
 
 interface StoreLayoutProps {
     children: React.ReactNode;
@@ -51,11 +52,6 @@ export default async function StoreLayout({
         ),
     });
 
-    // Multi-Tenant Security Authorization Guard
-    // const isOwner = store.ownerId === user.id;
-    // const isStaff = !!memberRecord;
-    // const isAllowed = isOwner || isStaff;
-
     if (!memberRecord) {
         redirect("/stores");
     }
@@ -72,6 +68,27 @@ export default async function StoreLayout({
     const storeMember = await findStoreMember(store.id, user.id);
     if (!storeMember) {
         redirect("/stores");
+    }
+
+    // 1. Ambil data headers untuk mendeteksi URL aktif saat ini
+    const headersList = await headers();
+    const fullPath = headersList.get("x-current-path") || "";
+
+    console.log(fullPath);
+
+    // 2. Cek apakah pengguna sedang mengakses halaman checkout kasir
+    // Kondisi ini mencakup '[storeSlug]/checkout' dan sub-path di bawahnya jika ada
+    const isCheckoutPage =
+        fullPath.endsWith(`/stores/${storeSlug}/checkout`) ||
+        fullPath.includes(`/stores/${storeSlug}/checkout/`);
+
+    // JIKA DI HALAMAN CHECKOUT: Bypass layout admin, render murni full-screen
+    if (isCheckoutPage) {
+        return (
+            <div className="h-screen w-screen overflow-hidden bg-background">
+                {children}
+            </div>
+        );
     }
 
     return (

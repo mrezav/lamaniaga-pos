@@ -141,8 +141,13 @@ export const productVariants = pgTable(
             to: ["public"],
             using: sql`store_id IN (SELECT owned_store_ids())`,
         }),
+        // 👈 WAJIB TAMBAHKAN INI: Membuat kombinasi kedua kolom menjadi unik
+        unique("product_variants_product_id_unique").on(
+            table.productId,
+            table.id,
+        ),
 
-        unique("product_variants_sku_key").on(table.sku),
+        unique("product_variants_sku_unique").on(table.sku),
 
         // Menggunakan index Btree optimasi tinggi hasil tarikan live database kamu
         index("product_variants_product_id_idx").using(
