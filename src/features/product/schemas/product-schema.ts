@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { z } from "zod";
 
 // Konfigurasi batasan validasi
@@ -28,7 +29,6 @@ export const productSchema = z.object({
     merk: z.string().min(1, "Merk produk wajib diisi").max(100),
     categoryId: z
         .string()
-        .uuid("Format ID kategori tidak valid")
         .nullable() // 1. Izinkan nilai null masuk dari rawData
         .refine((val) => val !== null && val !== "", {
             message: "Kategori belum dipilih", // 2. Blokir jika nilainya null saat validasi akhir
@@ -77,12 +77,13 @@ export const editProductVariantSchema = productVariantSchema.extend({
     id: z.string().uuid().optional(),
 });
 
-// 2. RE-USE productSchema utama untuk kebutuhan EDIT
+// 2. RE-USE productSchema utama untuk kebutuhan mengisi form EDIT
 export const editProductSchema = productSchema
     .extend({
         // Wajib ada ID produk saat edit
         id: z.string().uuid("ID produk tidak valid"),
         variants: z.array(z.any()), // terima mentah dulu dari DB
+        categoryId: z.string().nullable(), // meloloskan saat edit jika category dihapus
         // Gunakan array dari skema varian edit yang sudah kita sesuaikan di atas
         // variants: z
         //     .array(editProductVariantSchema)

@@ -20,8 +20,15 @@ import {
     Check,
     UsersRound,
     PackageIcon,
+    MonitorSmartphone,
+    SwitchCameraIcon,
+    SwitchCamera,
+    Wallet,
+    ShoppingCart,
+    ReceiptIcon,
 } from "lucide-react";
 import { ProfileRow, StoreMemberRow, StoreRow } from "@/db/schema";
+import { Button } from "@/components/ui/button";
 
 interface StoreLayoutClientProps {
     children: React.ReactNode;
@@ -75,6 +82,11 @@ export function StoreLayoutClient({
             icon: LayoutDashboard,
         },
         {
+            name: "Kasir",
+            href: `/stores/${store.slug}/checkout`,
+            icon: ShoppingCart,
+        },
+        {
             name: "Kategori",
             href: `/stores/${store.slug}/categories`,
             icon: Boxes,
@@ -83,6 +95,11 @@ export function StoreLayoutClient({
             name: "Produk",
             href: `/stores/${store.slug}/products`,
             icon: PackageIcon,
+        },
+        {
+            name: "Invoice",
+            href: `/stores/${store.slug}/invoices`,
+            icon: ReceiptIcon,
         },
     ];
 
@@ -96,9 +113,11 @@ export function StoreLayoutClient({
 
     const routeLabels: Record<string, string> = {
         dashboard: "Ringkasan Toko",
+        checkout: "Checkout",
         categories: "Kategori",
         products: "Produk",
         "store-member": "Member Toko",
+        invoices: "Invoices",
     };
     const currentPage = pathname.split("/").pop() || "";
     const title = routeLabels[currentPage] || currentPage;
@@ -250,17 +269,34 @@ export function StoreLayoutClient({
 
                     <div className="flex items-center gap-6">
                         {/* Store Switcher Option if user has multiple stores or just links to Selector */}
-                        <Link href="/stores">
-                            <button className="text-xs font-bold text-slate-500 hover:text-blue-600 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 hover:border-blue-200 transition-colors">
+                        <Button
+                            asChild
+                            size="sm"
+                            variant="ghost"
+                            className="text-xs font-bold text-slate-800 hover:bg-blue-600 hover:text-white"
+                        >
+                            <Link href="/stores">
+                                <SwitchCamera className="mr-2 h-4 w-4" />
                                 Ganti Toko
-                            </button>
-                        </Link>
+                            </Link>
+                        </Button>
 
                         {/* Notification Icon */}
-                        <button className="relative p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-50 transition-colors group">
+                        {/* <button className="relative p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-50 transition-colors group">
                             <Bell className="w-5 h-5" />
                             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full group-hover:scale-110 transition-transform" />
-                        </button>
+                        </button> */}
+                        <Button
+                            asChild
+                            size="sm"
+                            variant="ghost"
+                            className="font-bold text-slate-800 hover:bg-blue-600 hover:text-white"
+                        >
+                            <Link href={`/stores/${store.slug}/checkout`}>
+                                <ShoppingCart className="mr-2 h-4 w-4" />
+                                Kasir
+                            </Link>
+                        </Button>
 
                         {/* Profile Dropdown Menu */}
                         <div className="relative">
