@@ -12,15 +12,11 @@ import {
     sql,
 } from "drizzle-orm";
 import { count } from "drizzle-orm";
-
-interface FindProductsParams {
-    storeId: string;
-    search?: string;
-    page?: number;
-    limit?: number;
-    sortBy?: "name" | "createdAt";
-    sortOrder?: "asc" | "desc";
-}
+import {
+    FindProductsParams,
+    FindProductsResponse,
+    ProductVariantItem,
+} from "../types";
 
 export async function findProductsByStoreId({
     storeId,
@@ -29,7 +25,7 @@ export async function findProductsByStoreId({
     limit = 10,
     sortBy = "createdAt",
     sortOrder = "desc",
-}: FindProductsParams) {
+}: FindProductsParams): Promise<FindProductsResponse> {
     const conditions: SQL[] = [eq(products.storeId, storeId)];
     let searchOrderBy: SQL | undefined = undefined;
 
@@ -81,21 +77,14 @@ export async function findProductsByStoreId({
                 categoryName: categories.name,
 
                 // Agregasi relasi One-to-Many (Varian) menjadi array JSON
-                variants: sql<
-                    Array<{
-                        id: string;
-                        sku: string;
-                        price: string;
-                        stock: number;
-                        unit: string;
-                    }>
-                >`COALESCE(
+                variants: sql<ProductVariantItem[]>`COALESCE(
             json_agg(
               json_build_object(
                 'id', ${productVariants.id},
                 'sku', ${productVariants.sku},
                 'price', ${productVariants.price},
                 'stock', ${productVariants.stock},
+                'attributes', ${productVariants.attributes},
                 'unit', ${productVariants.unit}
               )
             ) FILTER (WHERE ${productVariants.id} IS NOT NULL), 

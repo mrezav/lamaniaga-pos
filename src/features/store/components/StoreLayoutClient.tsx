@@ -106,7 +106,7 @@ export function StoreLayoutClient({
     if (storeMember && storeMember?.role == "owner") {
         menuItems.push({
             name: "Member Toko",
-            href: `/stores/${store.slug}/store-member`,
+            href: `/stores/${store.slug}/members`,
             icon: UsersRound,
         });
     }
@@ -116,7 +116,7 @@ export function StoreLayoutClient({
         checkout: "Checkout",
         categories: "Kategori",
         products: "Produk",
-        "store-member": "Member Toko",
+        members: "Member Toko",
         invoices: "Invoices",
     };
     const currentPage = pathname.split("/").pop() || "";

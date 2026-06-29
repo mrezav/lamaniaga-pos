@@ -1,0 +1,132 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Plus, ChevronDown } from "lucide-react";
+import { useCartStore } from "@/features/cashier/store/useCartStore";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ProductListItem, ProductVariantItem } from "@/features/product/types";
+
+interface ProductCardProps {
+    product: ProductListItem;
+}
+
+export function ProductCard({ product }: ProductCardProps) {
+    const addToCart = useCartStore((state) => state.addToCart);
+
+    // Ambil varian termurah untuk ditampilkan sebagai harga "Mulai dari"
+    const prices = product.variants.map((v) => Number(v.price));
+    const minPrice = Math.min(...prices);
+    const hasMultipleVariants = product.variants.length > 1;
+
+    const handleAddVariantToCart = (variant: ProductVariantItem) => {
+        // Masukkan ke Zustand dengan menggabungkan nama produk + SKU sebagai penanda di Cart
+        addToCart({
+            id: variant.id, // ID Unik di Cart menggunakan ID Variant, bukan ID Produk parent
+            name: `${product.name}`,
+            price: Number(variant.price),
+            variant: variant,
+            stock: variant.stock,
+        });
+    };
+
+    return (
+        <div className="group bg-card rounded-xl border p-3 flex flex-col justify-between hover:border-primary/40 hover:shadow-md transition-all">
+            <div>
+                <div className="aspect-square w-full rounded-lg bg-muted mb-2 flex flex-col items-center justify-center text-muted-foreground p-2 text-center">
+                    <span className="text-[10px] uppercase font-bold text-muted-foreground/60">
+                        {product.merk}
+                    </span>
+                    <span className="text-xs font-medium mt-1 truncate w-full">
+                        {product.categoryName}
+                    </span>
+                </div>
+                <h4 className="font-semibold text-sm line-clamp-2 leading-tight">
+                    {product.name}
+                </h4>
+            </div>
+
+            <div className="mt-3 flex items-center justify-between gap-1">
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-muted-foreground leading-none">
+                        {hasMultipleVariants ? "Mulai dari" : "Harga"}
+                    </span>
+                    <span className="font-bold text-sm text-primary">
+                        Rp {minPrice.toLocaleString("id-ID")}
+                    </span>
+                </div>
+
+                {/* LOGIKA TOMBOL DINAMIS */}
+                {hasMultipleVariants ? (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 gap-1 rounded-lg border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white"
+                            >
+                                <span>Opsi</span>
+                                <ChevronDown className="h-3 w-3" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                            align="end"
+                            className="w-48 rounded-xl"
+                        >
+                            {product.variants.map((variant) => (
+                                <DropdownMenuItem
+                                    key={variant.id}
+                                    disabled={variant.stock === 0}
+                                    className="flex justify-between items-center text-xs py-2 cursor-pointer"
+                                    onClick={() =>
+                                        handleAddVariantToCart(variant)
+                                    }
+                                >
+                                    <div className="flex flex-col">
+                                        <span className="font-semibold">
+                                            {variant.sku}{" "}
+                                            {variant.attributes &&
+                                            variant.attributes.size
+                                                ? variant.attributes.size
+                                                : ""}{" "}
+                                            {variant.attributes &&
+                                            variant.attributes.color
+                                                ? variant.attributes.color
+                                                : ""}
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground">
+                                            Stok: {variant.stock} {variant.unit}
+                                        </span>
+                                    </div>
+                                    <span className="font-bold text-primary">
+                                        Rp{" "}
+                                        {Number(variant.price).toLocaleString(
+                                            "id-ID",
+                                        )}
+                                    </span>
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                ) : (
+                    // Jika hanya ada 1 varian, langsung eksekusi tanpa dropdown
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 w-8 p-0 rounded-full bg-primary/5 hover:bg-primary text-primary hover:text-white border-primary/20"
+                        disabled={product.variants[0]?.stock === 0}
+                        onClick={() =>
+                            handleAddVariantToCart(product.variants[0])
+                        }
+                    >
+                        <Plus className="h-4 w-4" />
+                    </Button>
+                )}
+            </div>
+        </div>
+    );
+}

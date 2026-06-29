@@ -67,6 +67,7 @@ export async function createProductAction(
         const data = validation.data;
         const productSlug = await generateProductSlug(data.name, store.id);
 
+        // TODO: HARUS MENGGUNAKAN TX AGAR DATA DI ROLLBACK SAAT TERJADI ERROR
         const product = await createProduct({
             name: data.name,
             merk: data.merk,
