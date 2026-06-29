@@ -29,6 +29,9 @@ export const useCategoryMutations = (
             queryClient.invalidateQueries({
                 queryKey: ["categories", storeSlug],
             });
+            queryClient.invalidateQueries({
+                queryKey: ["category-list", storeSlug],
+            });
         },
     });
 

@@ -4,7 +4,7 @@ import { editProductSchema } from "@/features/product/schemas/product-schema";
 import { UserAction } from "@/types";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
 interface EditProductPageProps {
     params: Promise<{ storeSlug: string; productId: string }>;
@@ -21,7 +21,9 @@ export default async function CreateProductPage({
         UserAction.EDIT,
     );
     if (!success) {
-        notFound();
+        // JIKA USER TIDAK MEMILIKI AUTHORIZATION UNTUK HALAMAN/AKSI INI TAMBAHKAN ?trigger=unauthorized SAAT REDIRECT
+        // UNTUK MEMICU TOASTTRIGGER
+        redirect(`/stores/${storeSlug}/products?trigger=unauthorized`);
     }
 
     const initialData = editProductSchema.parse(data);
