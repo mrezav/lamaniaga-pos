@@ -143,8 +143,8 @@ export const productVariants = pgTable(
         }),
         // 👈 WAJIB TAMBAHKAN INI: Membuat kombinasi kedua kolom menjadi unik
         unique("product_variants_product_id_unique").on(
-            table.productId,
             table.id,
+            table.productId,
         ),
 
         unique("product_variants_sku_unique").on(table.sku),

@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import {
     Sheet,
     SheetContent,
+    SheetDescription,
     SheetHeader,
     SheetTitle,
     SheetTrigger,
@@ -20,14 +21,30 @@ import { Search, ShoppingCart } from "lucide-react";
 import { useProducts } from "@/features/product/hooks/use-products";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useCategories } from "@/features/category/hooks/use-categories";
+import { useProfile } from "@/features/user/hooks/use-profile";
+import CashierHeader from "./CashierHeader";
+import { ProfileRow } from "@/db/schema";
 
 interface Props {
     storeSlug: string;
 }
 export default function CashierClientView({ storeSlug }: Props) {
     const { cart, clearCart, getTotals } = useCartStore();
-    const { subtotal, tax, grandTotal } = getTotals();
+    const { subTotal, tax, grandTotal } = getTotals();
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+    const inputSearch = "";
+
+    const { data: profileResponse } = useProfile();
+    const defaultProfile: ProfileRow = {
+        id: "",
+        fullName: "",
+        avatarUrl: null,
+        phoneNumber: null,
+        createdAt: null,
+        updatedAt: null,
+        lastActiveStoreId: null,
+    };
+    const profile = profileResponse?.data ?? defaultProfile;
 
     const [activeCategory, setActiveCategory] = useState("all");
     const { getCategoryListQuery } = useCategories({ storeSlug });
@@ -62,7 +79,7 @@ export default function CashierClientView({ storeSlug }: Props) {
     return (
         <div className="flex h-screen w-screen flex-col bg-background text-foreground overflow-hidden">
             {/* NAVBAR */}
-            <header className="flex h-14 items-center justify-between border-b bg-card px-4 shrink-0">
+            {/* <header className="flex h-14 items-center justify-between border-b bg-card px-4 shrink-0">
                 <span className="font-black text-xl tracking-tight text-primary">
                     Lamaniaga<span className="text-emerald-500">.pos</span>
                 </span>
@@ -73,8 +90,8 @@ export default function CashierClientView({ storeSlug }: Props) {
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>{" "}
                     Online
                 </Badge>
-            </header>
-
+            </header> */}
+            <CashierHeader profile={profile}></CashierHeader>
             {/* BODY GRID */}
             <div className="grid flex-1 grid-cols-12 overflow-hidden p-3 lg:p-4 gap-4">
                 {/* KATALOG PRODUK */}
@@ -85,6 +102,10 @@ export default function CashierClientView({ storeSlug }: Props) {
                             type="text"
                             placeholder="Cari atau scan... (F1)"
                             className="pl-9 py-5 bg-muted/50"
+                            onChange={(e) => {
+                                setSearch(e.target.value);
+                                setPage(1);
+                            }}
                         />
                     </div>
 
@@ -152,12 +173,12 @@ export default function CashierClientView({ storeSlug }: Props) {
                             <span className="text-sm text-muted-foreground">
                                 Total Harga
                             </span>
-                            <span className="text-l font-black text-gray-500">
-                                Rp {subtotal.toLocaleString("id-ID")}
+                            <span className="text-l font-bold tabular-nums">
+                                Rp {subTotal.toLocaleString("id-ID")}
                             </span>
                         </div>
                         <div className="flex justify-between items-baseline">
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-sm text-muted-foreground line-through">
                                 PPN 11%
                             </span>
                             <span className="text-l font-black text-pink-500">
@@ -168,7 +189,7 @@ export default function CashierClientView({ storeSlug }: Props) {
                             <span className="text-sm font-medium text-muted-foreground">
                                 Total Tagihan
                             </span>
-                            <span className="text-3xl font-black text-emerald-500">
+                            <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                                 Rp {grandTotal.toLocaleString("id-ID")}
                             </span>
                         </div>
@@ -176,7 +197,10 @@ export default function CashierClientView({ storeSlug }: Props) {
                             size="lg"
                             className="w-full font-bold"
                             disabled={cart.length === 0}
-                            onClick={() => setIsPaymentOpen(true)}
+                            onClick={() => {
+                                console.log(document.activeElement);
+                                setIsPaymentOpen(true);
+                            }}
                         >
                             PROSES BAYAR (F2)
                         </Button>
@@ -211,16 +235,18 @@ export default function CashierClientView({ storeSlug }: Props) {
                                 <SheetTitle className="text-base font-bold flex items-center gap-2">
                                     Keranjang Belanja
                                 </SheetTitle>
-                                {cart.length > 0 && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-xs text-destructive h-7"
-                                        onClick={clearCart}
-                                    >
-                                        Clear
-                                    </Button>
-                                )}
+                                <SheetDescription>
+                                    {cart.length > 0 && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-xs text-destructive h-7"
+                                            onClick={clearCart}
+                                        >
+                                            Clear
+                                        </Button>
+                                    )}
+                                </SheetDescription>
                             </div>
                         </SheetHeader>
                         <div className="flex-1 overflow-y-auto">
@@ -234,7 +260,7 @@ export default function CashierClientView({ storeSlug }: Props) {
                                     Total Harga
                                 </span>
                                 <span className="text-l font-black text-gray-500">
-                                    Rp {subtotal.toLocaleString("id-ID")}
+                                    Rp {subTotal.toLocaleString("id-ID")}
                                 </span>
                             </div>
                             <div className="flex justify-between items-baseline">
@@ -268,6 +294,7 @@ export default function CashierClientView({ storeSlug }: Props) {
 
             {/* GLOBAL PAYMENT DIALOG */}
             <PaymentModal
+                storeSlug={storeSlug}
                 isOpen={isPaymentOpen}
                 onOpenChange={setIsPaymentOpen}
             />

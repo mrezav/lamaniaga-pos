@@ -1,15 +1,7 @@
-import { ProductVariantItem } from "@/features/product/types";
-import { create } from "zustand";
+"use client";
 
-// Definisi Tipe Data Produk dari Database/Katalog
-export interface CartItem {
-    id: string;
-    name: string;
-    price: number;
-    variant: ProductVariantItem;
-    quantity: number;
-    stock: number;
-}
+import { create } from "zustand";
+import { CartItem } from "../types";
 
 interface CartState {
     cart: CartItem[];
@@ -18,11 +10,11 @@ interface CartState {
     removeFromCart: (id: string) => void;
     updateQuantity: (
         id: string,
-        action: "increment" | "decrement" | number,
+        action: "increment" | "decrement" | number | "",
     ) => void;
     clearCart: () => void;
     // Selector Otomatis (Helper)
-    getTotals: () => { subtotal: number; tax: number; grandTotal: number };
+    getTotals: () => { subTotal: number; tax: number; grandTotal: number };
 }
 
 export const useCartStore = create<CartState>((set, get) => ({
@@ -67,33 +59,40 @@ export const useCartStore = create<CartState>((set, get) => ({
                 if (item.id !== id) return item;
 
                 let newQuantity = item.quantity;
+
                 if (action === "increment") newQuantity += 1;
                 if (action === "decrement") newQuantity -= 1;
                 if (typeof action === "number") newQuantity = action;
 
-                // Validasi batas stok dan minimal 1 barang
+                // 1. Izinkan nilai 0 atau string kosong sewaktu user menghapus angka di input
+                if (action === "" || action === 0) {
+                    return { ...item, quantity: 0 };
+                }
+
+                // 2. Validasi batas stok (hanya jalan jika angkanya valid)
                 if (newQuantity > item.stock) newQuantity = item.stock;
+
+                // 3. Batasi minimal 1 jika aksi biasa, bukan sedang mengetik kosong
                 if (newQuantity < 1) newQuantity = 1;
 
                 return { ...item, quantity: newQuantity };
             }),
-            // Opsional: jika ingin otomatis hapus saat quantity menjadi 0, pasang logic di sini
         }));
     },
-
     // 4. Reset / Bersihkan Keranjang Belanja
     clearCart: () => set({ cart: [] }),
 
     // 5. Kalkulator Total Instan
     getTotals: () => {
         const cart = get().cart;
-        const subtotal = cart.reduce(
+        const subTotal = cart.reduce(
             (acc, item) => acc + item.price * item.quantity,
             0,
         );
-        const tax = subtotal * 0.11; // PPN 11%
-        const grandTotal = subtotal + tax;
+        // TODO: TERAPKAN SISTEM PAJAK AGAR KASIR DAPAT MEMILIH PAJAK YANG AKAN DIGUNAKAN SAAT CHECKOUT
+        const tax = subTotal * 0; // PPN 11% = 0.11
+        const grandTotal = subTotal + tax;
 
-        return { subtotal, tax, grandTotal };
+        return { subTotal, tax, grandTotal };
     },
 }));

@@ -24,12 +24,19 @@ export function ProductCard({ product }: ProductCardProps) {
     const hasMultipleVariants = product.variants.length > 1;
 
     const handleAddVariantToCart = (variant: ProductVariantItem) => {
+        const attributeParts = [
+            product.merk,
+            variant.attributes?.size,
+            variant.attributes?.color,
+        ].filter(Boolean);
+        const itemName = `${product.name} (${attributeParts.join(" ")})`;
         // Masukkan ke Zustand dengan menggabungkan nama produk + SKU sebagai penanda di Cart
         addToCart({
             id: variant.id, // ID Unik di Cart menggunakan ID Variant, bukan ID Produk parent
-            name: `${product.name}`,
+            productId: product.id,
+            name: itemName,
+            sku: variant.sku,
             price: Number(variant.price),
-            variant: variant,
             stock: variant.stock,
         });
     };
@@ -38,15 +45,28 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="group bg-card rounded-xl border p-3 flex flex-col justify-between hover:border-primary/40 hover:shadow-md transition-all">
             <div>
                 <div className="aspect-square w-full rounded-lg bg-muted mb-2 flex flex-col items-center justify-center text-muted-foreground p-2 text-center">
-                    <span className="text-[10px] uppercase font-bold text-muted-foreground/60">
-                        {product.merk}
-                    </span>
-                    <span className="text-xs font-medium mt-1 truncate w-full">
-                        {product.categoryName}
-                    </span>
+                    {product.imageUrl ? (
+                        <img
+                            src={product.imageUrl}
+                            alt="Product Cart"
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        <>
+                            <span className="text-[10px] uppercase font-bold text-muted-foreground/60">
+                                {product.merk}
+                            </span>
+                            <span className="text-xs font-medium mt-1 truncate w-full">
+                                {product.categoryName}
+                            </span>
+                        </>
+                    )}
                 </div>
                 <h4 className="font-semibold text-sm line-clamp-2 leading-tight">
-                    {product.name}
+                    {product.name}{" "}
+                    <span className="text-xs text-muted-foreground">
+                        ({product.merk})
+                    </span>
                 </h4>
             </div>
 
@@ -55,7 +75,7 @@ export function ProductCard({ product }: ProductCardProps) {
                     <span className="text-[10px] text-muted-foreground leading-none">
                         {hasMultipleVariants ? "Mulai dari" : "Harga"}
                     </span>
-                    <span className="font-bold text-sm text-primary">
+                    <span className="text-base font-semibold text-foreground tabular-nums">
                         Rp {minPrice.toLocaleString("id-ID")}
                     </span>
                 </div>
@@ -75,7 +95,7 @@ export function ProductCard({ product }: ProductCardProps) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
                             align="end"
-                            className="w-48 rounded-xl"
+                            className="w-56 rounded-xl"
                         >
                             {product.variants.map((variant) => (
                                 <DropdownMenuItem

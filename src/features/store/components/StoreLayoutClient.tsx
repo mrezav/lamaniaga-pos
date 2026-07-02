@@ -150,7 +150,7 @@ export function StoreLayoutClient({
                                     {store.name}
                                 </span>
                                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-                                    Pemilik Toko
+                                    {storeMember.role}
                                 </span>
                             </div>
                         )}

@@ -8,8 +8,7 @@ import {
     HydrationBoundary,
     QueryClient,
 } from "@tanstack/react-query";
-import { getUserProfileAction } from "@/features/user/actions/get-user-profile";
-import { verifyAuth } from "@/lib/auth";
+import { getCurrentProfileAction } from "@/features/user/actions/get-current-profile";
 import { redirect } from "next/navigation";
 import { ProfileRow } from "@/db/schema";
 import { getUserStoresActions } from "@/features/store/actions/get-user-stores";
@@ -28,8 +27,7 @@ export default async function OnboardingPage() {
         },
     });
 
-    const user = await verifyAuth();
-    const response = await getUserProfileAction(user.id);
+    const response = await getCurrentProfileAction();
     if (!response.success || !response.data) {
         redirect("/login");
     }
@@ -76,7 +74,7 @@ export default async function OnboardingPage() {
                         </div>
 
                         {/* Section 2: Bergabung dengan Toko */}
-                        <JoinStoreForm userId={user.id} />
+                        <JoinStoreForm userId={userProfile.id} />
                     </div>
 
                     {/* {joinedStores.length > 0 && (

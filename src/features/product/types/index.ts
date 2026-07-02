@@ -20,6 +20,7 @@ export interface ProductListItem {
     id: string;
     name: string;
     merk: string | null;
+    imageUrl: string | null;
     slug: string;
     isActive: boolean | null;
     description: string | null;
