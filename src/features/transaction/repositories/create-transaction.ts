@@ -54,10 +54,10 @@ export async function createCheckoutInvoice(
                 storeId: input.storeId,
                 userId: input.userId,
                 invoiceNumber: input.invoiceNumber,
-                subtotal: input.subtotal,
-                discount: input.discount ?? 0,
-                tax: input.tax ?? 0,
-                totalAmount: input.totalAmount,
+                subtotal: input.subtotal.toString(),
+                discount: input.discount?.toString(),
+                tax: input.tax?.toString(),
+                totalAmount: input.totalAmount.toString(),
                 paymentStatus: input.paymentStatus,
                 isInstallment: input.isInstallment,
                 dueDate: input.dueDate,
@@ -79,9 +79,9 @@ export async function createCheckoutInvoice(
             productName: item.productName,
             productMerk: item.productMerk,
             variantSku: item.variantSku,
-            price: item.price,
-            quantity: item.quantity,
-            subtotal: item.subtotal,
+            price: item.price.toString(),
+            quantity: item.quantity.toString(),
+            subtotal: item.subtotal.toString(),
         }));
 
         // Bulk Insert ke tabel `transaction_items`
@@ -91,7 +91,7 @@ export async function createCheckoutInvoice(
         if (input.amountPaid > 0) {
             await tx.insert(transactionPayments).values({
                 transactionId: newTransaction.id,
-                amountPaid: input.amountPaid,
+                amountPaid: input.amountPaid.toString(),
                 paymentMethod: input.paymentMethod,
                 notes: input.isInstallment
                     ? `Pembayaran cicilan awal sebesar Rp ${input.amountPaid.toLocaleString("id-ID")}`

@@ -1,7 +1,7 @@
 export const PERMISSIONS = {
     category: {
-        create: ["owner", "manager"],
-        edit: ["owner", "manager"],
+        create: ["owner", "manager", "cashier"],
+        edit: ["owner", "manager", "cashier"],
         delete: ["owner"],
         view: ["owner", "manager", "cashier"],
     },

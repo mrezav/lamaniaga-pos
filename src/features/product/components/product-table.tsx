@@ -24,17 +24,6 @@ import {
 import { Loader2, Search, Plus, Edit2, Trash2 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { useProductMutations } from "../hooks/use-product-mutations";
-import { toast } from "sonner";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
 import { getErrorMessage } from "@/lib/utils";
 import { ToastTrigger } from "@/components/shared/ToastTrigger";

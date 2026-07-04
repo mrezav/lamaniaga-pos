@@ -5,6 +5,9 @@ import { CartItem } from "../types";
 
 interface CartState {
     cart: CartItem[];
+    // state untuk menutup sheet keranjang belanja di mode android
+    isSheetOpen: boolean;
+    setSheetOpen: (open: boolean) => void;
     // Aksi-aksi (Actions)
     addToCart: (product: Omit<CartItem, "quantity">) => void;
     removeFromCart: (id: string) => void;
@@ -19,7 +22,8 @@ interface CartState {
 
 export const useCartStore = create<CartState>((set, get) => ({
     cart: [],
-
+    isSheetOpen: false,
+    setSheetOpen: (open: boolean) => set({ isSheetOpen: open }),
     // 1. Tambah Produk ke Keranjang
     addToCart: (product) => {
         set((state) => {

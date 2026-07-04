@@ -1,4 +1,5 @@
 export interface CheckoutRequest {
+    cashierName: string;
     cart: CartItem[];
     isInstallment: boolean;
     paymentMethod: string;

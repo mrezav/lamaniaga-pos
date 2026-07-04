@@ -28,7 +28,6 @@ import {
     Edit2,
     Trash2,
 } from "lucide-react";
-import Link from "next/link";
 import { useCategoryMutations } from "../hooks/use-category-mutation";
 import { redirect } from "next/navigation";
 import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";

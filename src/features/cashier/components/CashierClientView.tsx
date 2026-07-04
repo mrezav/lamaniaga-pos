@@ -29,7 +29,8 @@ interface Props {
     storeSlug: string;
 }
 export default function CashierClientView({ storeSlug }: Props) {
-    const { cart, clearCart, getTotals } = useCartStore();
+    const { cart, clearCart, getTotals, isSheetOpen, setSheetOpen } =
+        useCartStore();
     const { subTotal, tax, grandTotal } = getTotals();
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const inputSearch = "";
@@ -219,7 +220,7 @@ export default function CashierClientView({ storeSlug }: Props) {
                     </span>
                 </div>
 
-                <Sheet>
+                <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
                     <SheetTrigger asChild>
                         <Button className="font-bold gap-2">
                             <ShoppingCart className="h-4 w-4" /> Keranjang (
@@ -294,6 +295,7 @@ export default function CashierClientView({ storeSlug }: Props) {
 
             {/* GLOBAL PAYMENT DIALOG */}
             <PaymentModal
+                profile={profile}
                 storeSlug={storeSlug}
                 isOpen={isPaymentOpen}
                 onOpenChange={setIsPaymentOpen}

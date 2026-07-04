@@ -31,7 +31,6 @@ export const products = pgTable(
         description: text(),
         imageUrl: text("image_url"),
         isActive: boolean("is_active").default(true),
-
         // Audit Trail Columns
         createdAt: timestamp("created_at", {
             withTimezone: true,
@@ -92,9 +91,9 @@ export const productVariants = pgTable(
     {
         id: uuid().defaultRandom().primaryKey().notNull(),
         productId: uuid("product_id"),
-        sku: text(),
+        sku: text().notNull(),
         price: numeric({ precision: 15, scale: 2 }).default("0").notNull(),
-        stock: integer().default(0).notNull(),
+        stock: numeric({ precision: 10, scale: 3 }).default("0").notNull(),
         unit: text("unit").notNull().default("pcs"),
         // attributes: jsonb().default({}).notNull(),
         // Menentikan properti ini hanya dimiliki oleh sebagian kecil produk, dan jika nilainya berbeda, ia berpotensi mengubah harga atau stok seperti (ukuran dan warna)
@@ -147,7 +146,8 @@ export const productVariants = pgTable(
             table.productId,
         ),
 
-        unique("product_variants_sku_unique").on(table.sku),
+        unique("product_variants_sku_unique").on(table.storeId, table.sku),
+        index("product_variants_sku_idx").on(table.sku),
 
         // Menggunakan index Btree optimasi tinggi hasil tarikan live database kamu
         index("product_variants_product_id_idx").using(

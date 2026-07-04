@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { CheckoutRequest } from "@/features/cashier/types";
 import { checkPermission } from "@/lib/permission";
 import { getStoreBySlug } from "@/lib/store";
-import { getErrorMessage } from "@/lib/utils";
+import { generateInvoiceId, getErrorMessage } from "@/lib/utils";
 import { UserAction } from "@/types";
 import { verifyAndDeductStock } from "../repositories/verify-stock";
 import { createCheckoutInvoice } from "../repositories/create-transaction";
@@ -52,17 +52,19 @@ export async function checkoutAction(
             const taxAmount = stockProcess.subtotal * (tax / 100);
             const totalAmount = stockProcess.subtotal + taxAmount;
 
+            const invGenerated = generateInvoiceId();
+
             // STEP 3: Masukkan data invoice ke 3 tabel menggunakan data matang dari `stockProcess`
             const invoice = await createCheckoutInvoice(
                 {
                     storeId: store.id,
                     userId: userId,
-                    invoiceNumber: `INV-${Date.now()}`,
+                    invoiceNumber: invGenerated,
                     subtotal: stockProcess.subtotal,
                     totalAmount: totalAmount, // Total tagihan
                     paymentStatus: paymentStatus,
                     isInstallment: payload.isInstallment,
-                    cashierName: userId,
+                    cashierName: payload.cashierName,
                     paymentMethod: payload.paymentMethod as PaymentMethod,
                     amountPaid: payload.cashAmount,
                     items: stockProcess.items, // <-- Menggunakan data hasil join di repository stock

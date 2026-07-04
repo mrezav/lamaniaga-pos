@@ -16,19 +16,22 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wallet, Landmark } from "lucide-react";
 import { toast } from "sonner";
 import { useCheckoutMutation } from "@/features/transaction/hooks/use-checkout";
+import { ProfileRow } from "@/db/schema";
 
 interface PaymentModalProps {
+    profile: ProfileRow;
     storeSlug: string;
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
 }
 
 export function PaymentModal({
+    profile,
+    storeSlug,
     isOpen,
     onOpenChange,
-    storeSlug,
 }: PaymentModalProps) {
-    const { cart, getTotals, clearCart } = useCartStore();
+    const { cart, getTotals, clearCart, setSheetOpen } = useCartStore();
     const { subTotal, tax, grandTotal } = getTotals();
 
     const [paymentStatus, setPaymentStatus] = useState<"cash" | "credit">(
@@ -70,6 +73,7 @@ export function PaymentModal({
             }
 
             const payload = {
+                cashierName: profile.fullName,
                 cart,
                 isInstallment: isInstallment,
                 paymentMethod: "cash",
@@ -87,6 +91,7 @@ export function PaymentModal({
         clearCart();
         onOpenChange(false);
         setCashAmount(0);
+        setSheetOpen(false);
     };
 
     return (
