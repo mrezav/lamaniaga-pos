@@ -46,3 +46,10 @@ export const UserAction = {
 } as const;
 export type UserAction = (typeof UserAction)[keyof typeof UserAction];
 // Ambil value dengan cara UserAction.CREATE
+
+export interface Pagination {
+    page: number;
+    limit: number;
+    totalItems: number;
+    totalPages: number;
+}

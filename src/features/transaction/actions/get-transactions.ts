@@ -1,10 +1,10 @@
 "use server";
 
-import { getErrorMessage } from "@/lib/utils";
 import { findTransactions } from "../repositories/find-many";
 import { checkPermission } from "@/lib/permission";
 import { UserAction } from "@/types";
 import { FindTransactionsFilters } from "../types";
+import { getErrorMessage } from "@/utils";
 
 export async function getTransactionsAction(payload: FindTransactionsFilters) {
     try {
@@ -20,9 +20,9 @@ export async function getTransactionsAction(payload: FindTransactionsFilters) {
             startDate: payload.startDate,
             endDate: payload.endDate,
         });
-        console.log("======================================");
-        console.log(result);
-        console.log("======================================");
+        // console.log("======================================");
+        // console.log(result);
+        // console.log("======================================");
         return { success: true, data: result };
     } catch (err: unknown) {
         return { success: false, error: getErrorMessage(err) };

@@ -222,6 +222,7 @@ export const transactionPayments = pgTable(
 // 🚀 KUNCI CARA 1: Definisikan Relasi antara Transactions dan TransactionItems
 export const transactionsRelations = relations(transactions, ({ many }) => ({
     transactionItems: many(transactionItems),
+    transactionPayments: many(transactionPayments),
 }));
 
 export const transactionItemsRelations = relations(
@@ -233,3 +234,16 @@ export const transactionItemsRelations = relations(
         }),
     }),
 );
+export const transactionPaymentsRelations = relations(
+    transactionPayments,
+    ({ one }) => ({
+        transaction: one(transactions, {
+            fields: [transactionPayments.transactionId],
+            references: [transactions.id],
+        }),
+    }),
+);
+
+export type Transaction = typeof transactions.$inferSelect;
+export type TransactionItem = typeof transactionItems.$inferSelect;
+export type TransactionPayment = typeof transactionPayments.$inferSelect;

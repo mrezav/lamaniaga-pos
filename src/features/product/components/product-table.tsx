@@ -25,8 +25,8 @@ import { Loader2, Search, Plus, Edit2, Trash2 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { useProductMutations } from "../hooks/use-product-mutations";
 import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
-import { getErrorMessage } from "@/lib/utils";
 import { ToastTrigger } from "@/components/shared/ToastTrigger";
+import { getErrorMessage } from "@/utils";
 
 interface ProductTableProps {
     storeSlug: string;

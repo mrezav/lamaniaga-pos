@@ -1,6 +1,6 @@
 "use server";
 
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/utils";
 import { updateProductSchema } from "../schemas/product-schema";
 import { updateProduct } from "../repositories/update-product";
 import { checkPermission } from "@/lib/permission";

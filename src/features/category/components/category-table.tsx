@@ -31,7 +31,7 @@ import {
 import { useCategoryMutations } from "../hooks/use-category-mutation";
 import { redirect } from "next/navigation";
 import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/utils";
 
 export function CategoryTable({ storeSlug }: { storeSlug: string }) {
     const [search, setSearch] = useState("");

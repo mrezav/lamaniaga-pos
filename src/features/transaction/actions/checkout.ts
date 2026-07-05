@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { CheckoutRequest } from "@/features/cashier/types";
 import { checkPermission } from "@/lib/permission";
 import { getStoreBySlug } from "@/lib/store";
-import { generateInvoiceId, getErrorMessage } from "@/lib/utils";
+import { generateInvoiceId, getErrorMessage } from "@/utils";
 import { UserAction } from "@/types";
 import { verifyAndDeductStock } from "../repositories/verify-stock";
 import { createCheckoutInvoice } from "../repositories/create-transaction";

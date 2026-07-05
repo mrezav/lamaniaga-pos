@@ -133,18 +133,23 @@ export function ProductCard({ product }: ProductCardProps) {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 ) : (
-                    // Jika hanya ada 1 varian, langsung eksekusi tanpa dropdown
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 w-8 p-0 rounded-full bg-primary/5 hover:bg-primary text-primary hover:text-white border-primary/20"
-                        disabled={product.variants[0]?.stock === 0}
-                        onClick={() =>
-                            handleAddVariantToCart(product.variants[0])
-                        }
-                    >
-                        <Plus className="h-4 w-4" />
-                    </Button>
+                    <div>
+                        <span className="mx-2 text-xs text-muted text-slate-600">
+                            Stok: {product.variants[0].stock}{" "}
+                            {product.variants[0].unit}
+                        </span>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 w-8 p-0 rounded-full bg-primary/5 hover:bg-primary text-primary hover:text-white border-primary/20"
+                            disabled={product.variants[0]?.stock === 0}
+                            onClick={() =>
+                                handleAddVariantToCart(product.variants[0])
+                            }
+                        >
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    </div>
                 )}
             </div>
         </div>

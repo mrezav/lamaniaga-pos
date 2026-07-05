@@ -1,6 +1,6 @@
 "use server";
 
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/utils";
 import { signOut } from "../repositories/sign-out";
 
 export async function logoutAction() {

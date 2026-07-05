@@ -1,8 +1,6 @@
 import { Button } from "@/components/ui/button";
 import TransactionList from "@/features/transaction/components/transaction-list";
 import { getStoreBySlug } from "@/lib/store";
-import { Plus } from "lucide-react";
-import Link from "next/link";
 
 interface Props {
     params: Promise<{ storeSlug: string }>;
@@ -26,7 +24,10 @@ export default async function InvoicesPage({ params }: Props) {
                 </div>
             </div>
             <div className="w-full">
-                <TransactionList storeId={store.id}></TransactionList>
+                <TransactionList
+                    storeId={store.id}
+                    storeSlug={storeSlug}
+                ></TransactionList>
             </div>
         </div>
     );

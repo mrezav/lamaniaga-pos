@@ -18,10 +18,18 @@ export function useTransactions(filters: FindTransactionsFilters) {
         queryKey: [
             "Transactions",
             storeId,
-            { search, page, limit, sortBy, sortOrder, paymentStatus },
+            {
+                search,
+                page,
+                limit,
+                sortBy,
+                sortOrder,
+                paymentStatus,
+                startDate,
+                endDate,
+            },
         ],
         queryFn: async () => {
-            console.log(">>>", filters);
             const response = await getTransactionsAction(filters);
             if (!response.success) {
                 throw new Error(response.error);

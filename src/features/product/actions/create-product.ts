@@ -10,7 +10,7 @@ import {
     createProductVariants,
 } from "@/features/product/repositories";
 import { revalidatePath } from "next/cache";
-import { generateSku, getErrorMessage } from "@/lib/utils";
+import { generateSku, getErrorMessage } from "@/utils";
 import { deleteFileBulk, uploadFile } from "@/lib/storage";
 import { db } from "@/db";
 

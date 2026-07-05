@@ -80,3 +80,7 @@ export async function findTransactions(filters: FindTransactionsFilters) {
         },
     };
 }
+
+export type TransactionWithItems = Awaited<
+    ReturnType<typeof findTransactions>
+>["items"][number];
