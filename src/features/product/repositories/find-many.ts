@@ -39,6 +39,7 @@ export async function findVariantsByIds(variantIds: string[]) {
 export async function findProductsByStoreId({
     storeId,
     search = "",
+    categoryId = "",
     page = 1,
     limit = 10,
     sortBy = "createdAt",
@@ -67,6 +68,9 @@ export async function findProductsByStoreId({
             // 3. Hitung skor relevansi (Ranking)
             searchOrderBy = sql`ts_rank(${documentVector}, ${searchQuery}) DESC`;
         }
+    }
+    if (categoryId !== "" && categoryId !== "all") {
+        conditions.push(eq(products.categoryId, categoryId));
     }
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 

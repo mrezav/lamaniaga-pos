@@ -1,4 +1,4 @@
-import { ProductTable } from "@/features/product/components/product-table";
+import { ProductList } from "@/features/product/components/ProductList";
 
 interface ProductsPageProps {
     params: Promise<{ storeSlug: string }>;
@@ -21,7 +21,7 @@ export default async function ProductsPage({ params }: ProductsPageProps) {
                 </div>
             </div>
             <div className="w-full">
-                <ProductTable storeSlug={storeSlug} />
+                <ProductList storeSlug={storeSlug} />
             </div>
         </div>
     );

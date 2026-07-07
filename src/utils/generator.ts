@@ -65,20 +65,20 @@ export function generateInvoiceId(counter?: number): string {
 
 import { customAlphabet } from "nanoid";
 
-export function generateSku(storeName: string, productName: string): string {
+export function generateSku(productName: string, productMerk: string): string {
     // Ambil 3-4 karakter pertama, hapus spasi/karakter spesial, jadikan uppercase
-    const cleanStore = storeName
+    const cleanProduct = productName
         .replace(/[^a-zA-Z0-9]/g, "")
         .substring(0, 2)
         .toUpperCase();
-    const cleanProduct = productName
+    const cleanMerk = productMerk
         .replace(/[^a-zA-Z0-9]/g, "")
-        .substring(0, 3)
+        .substring(0, 2)
         .toUpperCase();
 
     // Generate 3 karakter random alfanumerik unik (menggunakan nanoid/crypto)
-    const nanoid = customAlphabet("1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", 4);
+    const nanoid = customAlphabet("1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", 5);
     const randomStr = nanoid();
 
-    return `${cleanStore}-${cleanProduct}-${randomStr}`;
+    return `${cleanProduct}-${cleanMerk}-${randomStr}`;
 }

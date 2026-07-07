@@ -1,6 +1,7 @@
 export interface FindProductsParams {
     storeId: string;
     search?: string;
+    categoryId?: string;
     page?: number;
     limit?: number;
     sortBy?: "name" | "createdAt";

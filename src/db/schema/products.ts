@@ -93,7 +93,7 @@ export const productVariants = pgTable(
         productId: uuid("product_id"),
         sku: text().notNull(),
         price: numeric({ precision: 15, scale: 2 }).default("0").notNull(),
-        stock: numeric({ precision: 10, scale: 3 }).default("0").notNull(),
+        stock: numeric({ precision: 8, scale: 2 }).default("0").notNull(),
         unit: text("unit").notNull().default("pcs"),
         // attributes: jsonb().default({}).notNull(),
         // Menentikan properti ini hanya dimiliki oleh sebagian kecil produk, dan jika nilainya berbeda, ia berpotensi mengubah harga atau stok seperti (ukuran dan warna)

@@ -54,7 +54,7 @@ export function TransactionTable({ transactions }: Props) {
                                 Invoice & Sumber
                             </TableHead>
                             <TableHead>Tanggal</TableHead>
-                            <TableHead>Produk</TableHead>
+                            <TableHead>Item Belanja</TableHead>
                             <TableHead>Tipe</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">

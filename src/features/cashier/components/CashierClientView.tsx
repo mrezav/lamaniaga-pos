@@ -8,7 +8,6 @@ import { PaymentModal } from "@/features/cashier/components/PaymentModal";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
     Sheet,
     SheetContent,
@@ -17,10 +16,10 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import { Search, ShoppingCart } from "lucide-react";
+import { Loader2, Search, SearchAlert, ShoppingCart } from "lucide-react";
 import { useProducts } from "@/features/product/hooks/use-products";
 import { useDebounce } from "@/hooks/use-debounce";
-import { useCategories } from "@/features/category/hooks/use-categories";
+import { useCategoryList } from "@/features/category/hooks/use-categories";
 import { useProfile } from "@/features/user/hooks/use-profile";
 import CashierHeader from "./CashierHeader";
 import { ProfileRow } from "@/db/schema";
@@ -29,11 +28,21 @@ interface Props {
     storeSlug: string;
 }
 export default function CashierClientView({ storeSlug }: Props) {
+    const [search, setSearch] = useState("");
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(20);
+    const [sort, setSort] = useState("createdAt-desc");
+    const debouncedSearch = useDebounce(search, 400);
+    const [sortBy, sortOrder] = sort.split("-") as [
+        "name" | "createdAt",
+        "asc" | "desc",
+    ];
+    const [categoryId, setCategoryId] = useState("all");
+
     const { cart, clearCart, getTotals, isSheetOpen, setSheetOpen } =
         useCartStore();
     const { subTotal, tax, grandTotal } = getTotals();
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-    const inputSearch = "";
 
     const { data: profileResponse } = useProfile();
     const defaultProfile: ProfileRow = {
@@ -47,28 +56,16 @@ export default function CashierClientView({ storeSlug }: Props) {
     };
     const profile = profileResponse?.data ?? defaultProfile;
 
-    const [activeCategory, setActiveCategory] = useState("all");
-    const { getCategoryListQuery } = useCategories({ storeSlug });
-    const { data: categoryListData, error: errorCategory } =
-        getCategoryListQuery;
+    const { data: categoryList } = useCategoryList(storeSlug);
     // Menyisipkan opsi "Semua" di awal array secara dinamis
     const categories = [
         { id: "all", name: "Semua" }, // Object mock untuk me-reset filter
-        ...(categoryListData ?? []),
-    ];
-
-    const [search, setSearch] = useState("");
-    const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(20);
-    const [sort, setSort] = useState("createdAt-desc");
-    const debouncedSearch = useDebounce(search, 400);
-    const [sortBy, sortOrder] = sort.split("-") as [
-        "name" | "createdAt",
-        "asc" | "desc",
+        ...(categoryList ?? []),
     ];
 
     const { data, isLoading } = useProducts({
         storeSlug,
+        categoryId,
         search: debouncedSearch,
         page,
         limit: limit,
@@ -113,18 +110,12 @@ export default function CashierClientView({ storeSlug }: Props) {
                     <div className="flex gap-2 overflow-x-auto pb-3 shrink-0 scrollbar-none">
                         {categories.map((cat) => {
                             // Menyisipkan opsi "Semua" di awal array secara dinamis
-                            const isActive = cat.id === activeCategory;
+                            const isActive = cat.id === categoryId;
                             return (
                                 <Button
                                     key={cat.id}
                                     onClick={() => {
-                                        setActiveCategory(cat.id);
-                                        if (cat.id == "all") {
-                                            setSearch("");
-                                        } else {
-                                            setSearch(cat.name);
-                                        }
-                                        // TIPS UX: Jika klik kategori, biasanya kita reset halaman ke page 1
+                                        setCategoryId(cat.id);
                                         setPage(1);
                                     }}
                                     variant={isActive ? "default" : "outline"}
@@ -136,11 +127,26 @@ export default function CashierClientView({ storeSlug }: Props) {
                         })}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-3 items-start">
-                        {items.map((product) => (
-                            <ProductCard key={product.id} product={product} />
-                        ))}
-                    </div>
+                    {isLoading ? (
+                        <div className="grid m-auto justify-items-center items-center text-center gap-2">
+                            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                            Mengambil data...
+                        </div>
+                    ) : items.length < 1 ? (
+                        <div className="grid m-auto justify-items-center items-center text-center gap-2">
+                            <SearchAlert className="h-12 w-12" />
+                            <p>Produk tidak ditemukan</p>
+                        </div>
+                    ) : (
+                        <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-3 items-start">
+                            {items.map((product) => (
+                                <ProductCard
+                                    key={product.id}
+                                    product={product}
+                                ></ProductCard>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* SIDEBAR KERANJANG (DESKTOP) */}

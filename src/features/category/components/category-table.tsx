@@ -68,7 +68,7 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
         limit,
         sortBy,
         sortOrder,
-    }).getCategoriesQuery;
+    });
 
     // Ekstrak data dengan fallback nilai default yang aman agar TIDAK EROR saat ganti halaman
     const items = data?.items ?? [];

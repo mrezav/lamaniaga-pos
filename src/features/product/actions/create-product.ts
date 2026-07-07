@@ -45,9 +45,9 @@ export async function createProductAction(
             imageFile: formData.get("imageFile") as File | null,
         };
 
-        // console.log("================== DATA MASUK DARI UI ==================");
-        // console.log(rawData);
-        // console.log("========================================================");
+        console.log("================== DATA MASUK DARI UI ==================");
+        console.log(rawData);
+        console.log("========================================================");
 
         // --- STEP 2: VALIDASI MENGGUNAKAN ZOD ---
         const validation = productSchema.safeParse(rawData);
@@ -94,7 +94,7 @@ export async function createProductAction(
                       const finalSku =
                           variant.sku && variant.sku.trim() !== ""
                               ? variant.sku
-                              : generateSku(store.name, data.name);
+                              : generateSku(data.name, data.merk);
 
                       return {
                           productId: product.id,
@@ -117,7 +117,7 @@ export async function createProductAction(
                               defaultVariant?.sku &&
                               defaultVariant.sku.trim() !== ""
                                   ? defaultVariant.sku
-                                  : generateSku(store.name, data.name),
+                                  : generateSku(data.name, data.merk),
                           price: (defaultVariant?.price ?? 0).toString(),
                           stock: (defaultVariant?.stock ?? 0).toString(),
                           unit: defaultVariant?.unit || "pcs",
