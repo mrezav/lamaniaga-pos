@@ -58,7 +58,7 @@ export const stores = pgTable(
             )`,
         }),
         index("stores_name_idx").on(table.name),
-        uniqueIndex("stores_slug_unique").on(table.slug),
+        uniqueIndex("stores_slug_uniq_idx").on(table.slug),
     ],
 );
 

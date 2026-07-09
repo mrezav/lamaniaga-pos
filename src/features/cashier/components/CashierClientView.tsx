@@ -8,37 +8,28 @@ import { PaymentModal } from "@/features/cashier/components/PaymentModal";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
     Sheet,
     SheetContent,
+    SheetDescription,
     SheetHeader,
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import { Search, ShoppingCart } from "lucide-react";
+import { Loader2, Search, SearchAlert, ShoppingCart } from "lucide-react";
 import { useProducts } from "@/features/product/hooks/use-products";
 import { useDebounce } from "@/hooks/use-debounce";
-import { useCategories } from "@/features/category/hooks/use-categories";
+import { useCategoryList } from "@/features/category/hooks/use-categories";
+import { useProfile } from "@/features/user/hooks/use-profile";
+import CashierHeader from "./CashierHeader";
+import { ProfileRow } from "@/db/schema";
+import LoadingSection from "@/components/shared/LoadingSection";
+import EmptySection from "@/components/shared/EmptySection";
 
 interface Props {
     storeSlug: string;
 }
 export default function CashierClientView({ storeSlug }: Props) {
-    const { cart, clearCart, getTotals } = useCartStore();
-    const { subtotal, tax, grandTotal } = getTotals();
-    const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-
-    const [activeCategory, setActiveCategory] = useState("all");
-    const { getCategoryListQuery } = useCategories({ storeSlug });
-    const { data: categoryListData, error: errorCategory } =
-        getCategoryListQuery;
-    // Menyisipkan opsi "Semua" di awal array secara dinamis
-    const categories = [
-        { id: "all", name: "Semua" }, // Object mock untuk me-reset filter
-        ...(categoryListData ?? []),
-    ];
-
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(20);
@@ -48,9 +39,35 @@ export default function CashierClientView({ storeSlug }: Props) {
         "name" | "createdAt",
         "asc" | "desc",
     ];
+    const [categoryId, setCategoryId] = useState("all");
+
+    const { cart, clearCart, getTotals, isSheetOpen, setSheetOpen } =
+        useCartStore();
+    const { subTotal, tax, grandTotal } = getTotals();
+    const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+
+    const { data: profileResponse } = useProfile();
+    const defaultProfile: ProfileRow = {
+        id: "",
+        fullName: "",
+        avatarUrl: null,
+        phoneNumber: null,
+        createdAt: null,
+        updatedAt: null,
+        lastActiveStoreId: null,
+    };
+    const profile = profileResponse?.data ?? defaultProfile;
+
+    const { data: categoryList } = useCategoryList(storeSlug);
+    // Menyisipkan opsi "Semua" di awal array secara dinamis
+    const categories = [
+        { id: "all", name: "Semua" }, // Object mock untuk me-reset filter
+        ...(categoryList ?? []),
+    ];
 
     const { data, isLoading } = useProducts({
         storeSlug,
+        categoryId,
         search: debouncedSearch,
         page,
         limit: limit,
@@ -62,7 +79,7 @@ export default function CashierClientView({ storeSlug }: Props) {
     return (
         <div className="flex h-screen w-screen flex-col bg-background text-foreground overflow-hidden">
             {/* NAVBAR */}
-            <header className="flex h-14 items-center justify-between border-b bg-card px-4 shrink-0">
+            {/* <header className="flex h-14 items-center justify-between border-b bg-card px-4 shrink-0">
                 <span className="font-black text-xl tracking-tight text-primary">
                     Lamaniaga<span className="text-emerald-500">.pos</span>
                 </span>
@@ -73,8 +90,8 @@ export default function CashierClientView({ storeSlug }: Props) {
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>{" "}
                     Online
                 </Badge>
-            </header>
-
+            </header> */}
+            <CashierHeader profile={profile}></CashierHeader>
             {/* BODY GRID */}
             <div className="grid flex-1 grid-cols-12 overflow-hidden p-3 lg:p-4 gap-4">
                 {/* KATALOG PRODUK */}
@@ -85,24 +102,22 @@ export default function CashierClientView({ storeSlug }: Props) {
                             type="text"
                             placeholder="Cari atau scan... (F1)"
                             className="pl-9 py-5 bg-muted/50"
+                            onChange={(e) => {
+                                setSearch(e.target.value);
+                                setPage(1);
+                            }}
                         />
                     </div>
 
                     <div className="flex gap-2 overflow-x-auto pb-3 shrink-0 scrollbar-none">
                         {categories.map((cat) => {
                             // Menyisipkan opsi "Semua" di awal array secara dinamis
-                            const isActive = cat.id === activeCategory;
+                            const isActive = cat.id === categoryId;
                             return (
                                 <Button
                                     key={cat.id}
                                     onClick={() => {
-                                        setActiveCategory(cat.id);
-                                        if (cat.id == "all") {
-                                            setSearch("");
-                                        } else {
-                                            setSearch(cat.name);
-                                        }
-                                        // TIPS UX: Jika klik kategori, biasanya kita reset halaman ke page 1
+                                        setCategoryId(cat.id);
                                         setPage(1);
                                     }}
                                     variant={isActive ? "default" : "outline"}
@@ -114,11 +129,22 @@ export default function CashierClientView({ storeSlug }: Props) {
                         })}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-3 items-start">
-                        {items.map((product) => (
-                            <ProductCard key={product.id} product={product} />
-                        ))}
-                    </div>
+                    {isLoading ? (
+                        <div className="grid m-auto justify-items-center items-center text-center">
+                            <LoadingSection></LoadingSection>
+                        </div>
+                    ) : items.length < 1 ? (
+                            <EmptySection></EmptySection>
+                    ) : (
+                        <div className="overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 items-start">
+                            {items.map((product) => (
+                                <ProductCard
+                                    key={product.id}
+                                    product={product}
+                                ></ProductCard>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* SIDEBAR KERANJANG (DESKTOP) */}
@@ -152,12 +178,12 @@ export default function CashierClientView({ storeSlug }: Props) {
                             <span className="text-sm text-muted-foreground">
                                 Total Harga
                             </span>
-                            <span className="text-l font-black text-gray-500">
-                                Rp {subtotal.toLocaleString("id-ID")}
+                            <span className="text-l font-bold tabular-nums">
+                                Rp {subTotal.toLocaleString("id-ID")}
                             </span>
                         </div>
                         <div className="flex justify-between items-baseline">
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-sm text-muted-foreground line-through">
                                 PPN 11%
                             </span>
                             <span className="text-l font-black text-pink-500">
@@ -168,7 +194,7 @@ export default function CashierClientView({ storeSlug }: Props) {
                             <span className="text-sm font-medium text-muted-foreground">
                                 Total Tagihan
                             </span>
-                            <span className="text-3xl font-black text-emerald-500">
+                            <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                                 Rp {grandTotal.toLocaleString("id-ID")}
                             </span>
                         </div>
@@ -176,7 +202,10 @@ export default function CashierClientView({ storeSlug }: Props) {
                             size="lg"
                             className="w-full font-bold"
                             disabled={cart.length === 0}
-                            onClick={() => setIsPaymentOpen(true)}
+                            onClick={() => {
+                                console.log(document.activeElement);
+                                setIsPaymentOpen(true);
+                            }}
                         >
                             PROSES BAYAR (F2)
                         </Button>
@@ -195,7 +224,7 @@ export default function CashierClientView({ storeSlug }: Props) {
                     </span>
                 </div>
 
-                <Sheet>
+                <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
                     <SheetTrigger asChild>
                         <Button className="font-bold gap-2">
                             <ShoppingCart className="h-4 w-4" /> Keranjang (
@@ -211,16 +240,18 @@ export default function CashierClientView({ storeSlug }: Props) {
                                 <SheetTitle className="text-base font-bold flex items-center gap-2">
                                     Keranjang Belanja
                                 </SheetTitle>
-                                {cart.length > 0 && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-xs text-destructive h-7"
-                                        onClick={clearCart}
-                                    >
-                                        Clear
-                                    </Button>
-                                )}
+                                <SheetDescription>
+                                    {cart.length > 0 && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-xs text-destructive h-7"
+                                            onClick={clearCart}
+                                        >
+                                            Clear
+                                        </Button>
+                                    )}
+                                </SheetDescription>
                             </div>
                         </SheetHeader>
                         <div className="flex-1 overflow-y-auto">
@@ -234,7 +265,7 @@ export default function CashierClientView({ storeSlug }: Props) {
                                     Total Harga
                                 </span>
                                 <span className="text-l font-black text-gray-500">
-                                    Rp {subtotal.toLocaleString("id-ID")}
+                                    Rp {subTotal.toLocaleString("id-ID")}
                                 </span>
                             </div>
                             <div className="flex justify-between items-baseline">
@@ -268,6 +299,8 @@ export default function CashierClientView({ storeSlug }: Props) {
 
             {/* GLOBAL PAYMENT DIALOG */}
             <PaymentModal
+                profile={profile}
+                storeSlug={storeSlug}
                 isOpen={isPaymentOpen}
                 onOpenChange={setIsPaymentOpen}
             />

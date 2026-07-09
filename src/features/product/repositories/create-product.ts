@@ -6,8 +6,11 @@ import {
     productVariants,
 } from "@/db/schema";
 
-export async function createProduct(data: NewProductInput) {
-    const [product] = await db
+export type DBTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+export async function createProduct(data: NewProductInput, tx?: DBTransaction) {
+    const client = tx || db;
+    const [product] = await client
         .insert(products)
         .values({
             name: data.name,
@@ -24,8 +27,16 @@ export async function createProduct(data: NewProductInput) {
     return product;
 }
 
-export async function createProductVariants(variants: NewVariantInput[]) {
-    return await db.insert(productVariants).values(
+// Sesuaikan tipe `tx` dengan DB Anda. Jika bingung tipenya, Anda bisa gunakan `any` sementara,
+// atau gunakan instance generik dari Drizzle.
+export async function createProductVariants(
+    variants: NewVariantInput[],
+    tx?: DBTransaction, // 👈 Tambahkan parameter opsional tx di sini
+) {
+    // KUNCI: Gunakan `tx` jika tersedia, jika tidak ada fallback ke `db` biasa
+    const client = tx || db;
+
+    return await client.insert(productVariants).values(
         variants.map((variant) => ({
             productId: variant.productId,
             sku: variant.sku,

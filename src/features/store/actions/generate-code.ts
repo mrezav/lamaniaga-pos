@@ -3,8 +3,8 @@
 import { checkPermission } from "@/lib/permission";
 
 import { checkExistingJoinCode, setJoinCode } from "../repositories";
-import { generateRandomCode, getErrorMessage } from "@/lib/utils";
 import { UserAction } from "@/types";
+import { generateRandomCode, getErrorMessage } from "@/utils";
 
 export async function generateJoinCodeAction(storeId: string) {
     try {

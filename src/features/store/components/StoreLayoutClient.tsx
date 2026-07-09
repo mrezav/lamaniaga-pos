@@ -97,8 +97,8 @@ export function StoreLayoutClient({
             icon: PackageIcon,
         },
         {
-            name: "Invoice",
-            href: `/stores/${store.slug}/invoices`,
+            name: "Transaksi",
+            href: `/stores/${store.slug}/transactions`,
             icon: ReceiptIcon,
         },
     ];
@@ -117,7 +117,7 @@ export function StoreLayoutClient({
         categories: "Kategori",
         products: "Produk",
         members: "Member Toko",
-        invoices: "Invoices",
+        transactions: "Transaksi",
     };
     const currentPage = pathname.split("/").pop() || "";
     const title = routeLabels[currentPage] || currentPage;
@@ -150,7 +150,7 @@ export function StoreLayoutClient({
                                     {store.name}
                                 </span>
                                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-                                    Pemilik Toko
+                                    {storeMember.role}
                                 </span>
                             </div>
                         )}

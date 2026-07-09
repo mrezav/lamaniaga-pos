@@ -86,13 +86,13 @@ export default function ProductVariantForm<T extends FieldValues>({
                             {/* Input SKU */}
                             <div>
                                 <label className="text-xs font-medium text-gray-600">
-                                    SKU
+                                    SKU (Opsional)
                                 </label>
                                 <input
                                     {...register(
                                         `variants.${index}.sku` as FieldPath<T>,
                                     )}
-                                    placeholder="Contoh: COK-XL"
+                                    placeholder="Contoh: KA-PE-XXX1"
                                     className="border border-gray-300 p-2 w-full rounded-md text-sm mt-1 outline-none"
                                 />
                                 {variantErrors?.sku?.message && (
@@ -130,6 +130,8 @@ export default function ProductVariantForm<T extends FieldValues>({
                                 </label>
                                 <input
                                     type="number"
+                                    step="1"
+                                    min="0"
                                     {...register(
                                         `variants.${index}.stock` as FieldPath<T>,
                                         { valueAsNumber: true },

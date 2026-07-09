@@ -16,8 +16,8 @@ export default async function CreateProductPage({
     const { storeSlug, productId } = await params;
 
     const { success, error, data } = await getProductByIdAction(
-        storeSlug,
         productId,
+        storeSlug,
         UserAction.EDIT,
     );
     if (!success) {

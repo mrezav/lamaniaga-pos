@@ -1,10 +1,14 @@
+"use server";
+
+import { verifyAuth } from "@/lib/auth";
 import { findUserProfile } from "../repositories";
 
-export async function getUserProfileAction(userId: string) {
+export async function getCurrentProfileAction() {
     try {
-        const profiles = await findUserProfile(userId);
+        const user = await verifyAuth();
+        const profiles = await findUserProfile(user.id);
         if (!profiles) {
-            return { success: false };
+            return { success: false, error: "Profile tidak ditemukan" };
         }
         return { success: true, data: profiles };
     } catch (error) {

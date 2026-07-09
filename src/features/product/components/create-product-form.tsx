@@ -12,10 +12,10 @@ import {
     productSchema,
 } from "@/features/product/schemas/product-schema";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2 } from "lucide-react";
-import { useCategories } from "@/features/category/hooks/use-categories";
+import { useCategoryList } from "@/features/category/hooks/use-categories";
 import { useProductMutations } from "../hooks/use-product-mutations";
 import ProductVariantsForm from "./product-variant-form";
+import { Loader2 } from "lucide-react";
 
 interface CreateProductFormProps {
     storeSlug: string;
@@ -82,12 +82,8 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
         }
     }, [hasVariants, replace]);
 
-    const { getCategoryListQuery } = useCategories({
-        storeSlug,
-    });
-
     const { data: categoryListData, error: errorCategory } =
-        getCategoryListQuery;
+        useCategoryList(storeSlug);
 
     async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -292,18 +288,19 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
                     <p className="text-sm font-semibold text-slate-800 border-b border-slate-100 pb-2">
                         Informasi Stok & Harga
                     </p>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 xl:grid-cols-6">
                         <div className="space-y-2">
-                            <label className="text-xs font-semibold text-slate-600">
+                            <label className="text-xs font-muted text-slate-600">
                                 SKU (Opsional)
                             </label>
                             <Input
                                 {...register("variants.0.sku")}
+                                placeholder="KA-XH-XXX1"
                                 className="focus-visible:ring-teal-500"
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-semibold text-slate-600">
+                            <label className="text-xs font-muted text-slate-600">
                                 Harga
                             </label>
                             <Input
@@ -321,7 +318,7 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
                             )}
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-semibold text-slate-600">
+                            <label className="text-xs font-muted text-slate-600">
                                 Stok
                             </label>
                             <Input
@@ -334,6 +331,50 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
                             {errors.variants?.[0]?.stock && (
                                 <p className="text-xs text-red-500">
                                     {errors.variants?.[0]?.stock?.message}
+                                </p>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-muted text-slate-600">
+                                Unit
+                            </label>
+                            <Input
+                                {...register("variants.0.unit")}
+                                className="focus-visible:ring-teal-500"
+                            />
+                            {errors.variants?.[0]?.stock && (
+                                <p className="text-xs text-red-500">
+                                    {errors.variants?.[0]?.unit?.message}
+                                </p>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-muted text-slate-600">
+                                Ukuran (Opsional)
+                            </label>
+                            <Input
+                                {...register("variants.0.size")}
+                                placeholder="L/XL"
+                                className="focus-visible:ring-teal-500"
+                            />
+                            {errors.variants?.[0]?.size && (
+                                <p className="text-xs text-red-500">
+                                    {errors.variants?.[0]?.size?.message}
+                                </p>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-muted text-slate-600">
+                                Warna (Opsional)
+                            </label>
+                            <Input
+                                {...register("variants.0.color")}
+                                placeholder="Hitam"
+                                className="focus-visible:ring-teal-500"
+                            />
+                            {errors.variants?.[0]?.color && (
+                                <p className="text-xs text-red-500">
+                                    {errors.variants?.[0]?.color?.message}
                                 </p>
                             )}
                         </div>

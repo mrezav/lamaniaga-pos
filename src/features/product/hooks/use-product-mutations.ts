@@ -54,7 +54,7 @@ export const useProductMutations = (storeSlug: string) => {
             return response;
         },
         onSuccess: (response) => {
-            toast.message(`Berhasil menghapus produk : ${response.data}`);
+            toast.message(`Berhasil menghapus produk : ${response.data?.name}`);
             queryClient.invalidateQueries({
                 queryKey: ["products", storeSlug],
             });

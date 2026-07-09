@@ -1,9 +1,7 @@
 "use client";
 
-import { useFieldArray, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import {
-    EditProductFormValues,
-    editProductSchema,
     ProductInput,
     ProductOutput,
     productSchema,
@@ -13,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useCategories } from "@/features/category/hooks/use-categories";
+import { useCategoryList } from "@/features/category/hooks/use-categories";
 import ProductVariantForm from "./product-variant-form";
 import { useProductMutations } from "../hooks/use-product-mutations";
 import { useRouter } from "next/navigation";
@@ -45,7 +43,13 @@ export function EditProductForm({ storeSlug, productId, initialData }: props) {
         formState: { errors },
     } = useForm<ProductInput>({
         resolver: zodResolver(productSchema),
-        defaultValues: initialData,
+        defaultValues: {
+            ...initialData,
+            variants: initialData.variants.map((variant) => ({
+                ...variant,
+                stock: Number(variant.stock),
+            })),
+        },
     });
 
     useEffect(() => {
@@ -127,12 +131,8 @@ export function EditProductForm({ storeSlug, productId, initialData }: props) {
         setValue("imageFile", file);
     }
 
-    const { getCategoryListQuery } = useCategories({
-        storeSlug,
-    });
-
     const { data: categoryListData, error: errorCategory } =
-        getCategoryListQuery;
+        useCategoryList(storeSlug);
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mx-auto">
             <div className="grid grid-cols-1 gap-6 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
@@ -265,14 +265,14 @@ export function EditProductForm({ storeSlug, productId, initialData }: props) {
             </Button>
 
             {/* LIVE PREVIEW BOX */}
-            {/* <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl mt-10">
+            <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl mt-10">
                 <p className="text-xs font-bold text-teal-400 uppercase tracking-wider mb-2">
                     ⚡ Live Preview State Array:
                 </p>
                 <pre className="text-xs font-mono text-slate-300 bg-slate-950/60 p-4 rounded-xl overflow-x-auto max-h-64 border border-slate-800/50">
-                    {JSON.stringify(watchVariants, null, 2)}
+                    {JSON.stringify(initialData, null, 2)}
                 </pre>
-            </div> */}
+            </div>
         </form>
     );
 }

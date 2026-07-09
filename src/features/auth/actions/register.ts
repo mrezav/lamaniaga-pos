@@ -3,7 +3,7 @@
 import { signUpParams } from "../types/auth";
 import { registerSchema } from "../schema/auth";
 import { signUp } from "../repositories";
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/utils";
 
 export async function register(input: signUpParams) {
     try {

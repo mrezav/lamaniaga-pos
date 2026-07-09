@@ -4,6 +4,7 @@ import { getProductsAction } from "@/features/product/actions/get-products";
 interface UseProductsParams {
     storeSlug: string;
     search?: string;
+    categoryId?: string;
     page?: number;
     limit?: number;
     sortBy?: "name" | "createdAt";
@@ -11,13 +12,14 @@ interface UseProductsParams {
 }
 
 export function useProducts(filters: UseProductsParams) {
-    const { storeSlug, search, page, limit, sortBy, sortOrder } = filters;
+    const { storeSlug, search, categoryId, page, limit, sortBy, sortOrder } =
+        filters;
 
     return useQuery({
         queryKey: [
             "products",
             storeSlug,
-            { search, page, limit, sortBy, sortOrder },
+            { search, categoryId, page, limit, sortBy, sortOrder },
         ],
         queryFn: async () => {
             const result = await getProductsAction(filters);

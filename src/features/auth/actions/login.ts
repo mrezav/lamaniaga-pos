@@ -2,7 +2,7 @@
 
 import { signIn } from "@/features/auth/repositories";
 import { loginSchema } from "@/features/auth/schema/auth";
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/utils";
 
 export async function login(input: unknown) {
     try {

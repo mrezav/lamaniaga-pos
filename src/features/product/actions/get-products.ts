@@ -8,6 +8,7 @@ import { findProductsByStoreId } from "@/features/product/repositories/find-many
 interface GetProductsParams {
     storeSlug: string;
     search?: string;
+    categoryId?: string;
     page?: number;
     limit?: number;
     sortBy?: "name" | "createdAt";
@@ -22,6 +23,7 @@ export async function getProductsAction(payload: GetProductsParams) {
         const result = await findProductsByStoreId({
             storeId: store.id,
             search: payload.search,
+            categoryId: payload.categoryId,
             page: payload.page,
             limit: payload.limit,
             sortBy: payload.sortBy,

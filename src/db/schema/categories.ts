@@ -8,9 +8,10 @@ import {
     timestamp,
     index,
 } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { stores } from "./stores";
 import { users } from "./users";
+import { products } from "./products";
 
 export const DEFAULT_CATEGORY_ID = "00000000-0000-0000-0000-000000000000";
 
@@ -46,8 +47,9 @@ export const categories = pgTable(
 
         // ⚠️ CATATAN UNIQUE: Jika slug unik global, biarkan seperti ini.
         // Tapi jika slug hanya boleh unik per toko, ganti menjadi: unique().on(table.storeId, table.slug)
-        unique("categories_slug_key").on(table.storeId, table.slug),
+        unique("categories_slug_unique").on(table.storeId, table.slug),
         index("categories_store_id_idx").on(table.storeId),
+
         // ⚡ INDEKS GIN UNTUK KATEGORI (KARENA BERBEDA TABEL)
         index("categories_fts_idx").using(
             "gin",
@@ -65,3 +67,7 @@ export const categories = pgTable(
 );
 
 export type CategoryRow = typeof categories.$inferInsert;
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+    products: many(products),
+}));

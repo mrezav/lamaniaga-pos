@@ -26,7 +26,7 @@ export type ProductVariantOutput = z.infer<typeof productVariantSchema>;
 
 export const productSchema = z.object({
     name: z.string().min(2, "Nama produk minimal 2 karakter").max(255),
-    merk: z.string().min(1, "Merk produk wajib diisi").max(100),
+    merk: z.string().min(2, "Merk produk minimal 2 karakter").max(100),
     categoryId: z
         .string()
         .nullable() // 1. Izinkan nilai null masuk dari rawData

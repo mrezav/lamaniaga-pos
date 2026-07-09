@@ -3,7 +3,7 @@
 import { findStoreMembers } from "../repositories";
 import { checkPermission } from "@/lib/permission";
 import { verifyAuth } from "@/lib/auth";
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/utils";
 import { UserAction } from "@/types";
 
 /**

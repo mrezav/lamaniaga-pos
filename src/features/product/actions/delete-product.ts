@@ -1,9 +1,10 @@
 "use server";
+
 import { checkPermission } from "@/lib/permission";
 import { getStoreBySlug } from "@/lib/store";
 import { UserAction } from "@/types";
 import { deleteProduct, findProductById } from "../repositories";
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/utils";
 import { deleteFileBulk } from "@/lib/storage";
 
 export async function deleteProductAction(

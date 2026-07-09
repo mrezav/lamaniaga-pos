@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCartStore } from "@/features/cashier/store/useCartStore";
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
@@ -13,37 +14,84 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wallet, Landmark } from "lucide-react";
+import { toast } from "sonner";
+import { useCheckoutMutation } from "@/features/transaction/hooks/use-checkout";
+import { ProfileRow } from "@/db/schema";
 
 interface PaymentModalProps {
+    profile: ProfileRow;
+    storeSlug: string;
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
 }
 
-export function PaymentModal({ isOpen, onOpenChange }: PaymentModalProps) {
-    const { getTotals, clearCart } = useCartStore();
-    const { grandTotal } = getTotals();
+export function PaymentModal({
+    profile,
+    storeSlug,
+    isOpen,
+    onOpenChange,
+}: PaymentModalProps) {
+    const { cart, getTotals, clearCart, setSheetOpen } = useCartStore();
+    const { subTotal, tax, grandTotal } = getTotals();
 
     const [paymentStatus, setPaymentStatus] = useState<"cash" | "credit">(
         "cash",
     );
     const [cashAmount, setCashAmount] = useState<number>(0);
-    const [downPayment, setDownPayment] = useState<number>(0);
 
-    const changeAmount = cashAmount - grandTotal;
-    const remainingDebt = grandTotal - downPayment;
+    function handlePaymentStatus(val: "cash" | "credit") {
+        setPaymentStatus(val);
+        setCashAmount(0);
+    }
 
-    const handleCheckoutSubmit = () => {
-        // Di sini nanti tempat kirim data payload ke database backend Lamaniaga kamu
-        console.log("Submit Transaksi:", {
-            paymentStatus,
-            cashAmount,
-            downPayment,
-            remainingDebt,
-        });
+    const cashBack = cashAmount > grandTotal ? cashAmount - grandTotal : 0;
+    const remainingDebt = grandTotal > cashAmount ? grandTotal - cashAmount : 0;
+
+    const { mutateAsync: checkout, isPending } = useCheckoutMutation(storeSlug);
+
+    const handleCheckoutSubmit = async () => {
+        try {
+            if (cart.length === 0) {
+                toast.error("Keranjang masih kosong");
+                return;
+            }
+
+            let isInstallment = false;
+            if (paymentStatus === "cash") {
+                if (cashAmount < grandTotal) {
+                    toast.error("Nominal pembayaran kurang!");
+                    return;
+                }
+            } else {
+                isInstallment = true;
+                if (cashAmount >= grandTotal) {
+                    toast.error(
+                        "Pembayaran melebihi tagihan, silahkan gunakan transaksi Tunai(Lunas)",
+                    );
+                    return;
+                }
+            }
+
+            const payload = {
+                cashierName: profile.fullName,
+                cart,
+                isInstallment: isInstallment,
+                paymentMethod: "cash",
+                subTotal: subTotal,
+                tax: tax,
+                grandTotal: grandTotal,
+                cashAmount: cashAmount,
+            };
+            await checkout(payload);
+        } catch (error) {
+            console.error(error);
+        }
 
         // Reset status lokal & kosongkan keranjang belanja setelah sukses
         clearCart();
         onOpenChange(false);
+        setCashAmount(0);
+        setSheetOpen(false);
     };
 
     return (
@@ -53,6 +101,7 @@ export function PaymentModal({ isOpen, onOpenChange }: PaymentModalProps) {
                     <DialogTitle className="text-center text-muted-foreground font-medium text-sm uppercase tracking-wider">
                         Konfirmasi Pembayaran
                     </DialogTitle>
+                    <DialogDescription></DialogDescription>
                 </DialogHeader>
 
                 <div className="text-center py-2">
@@ -71,7 +120,7 @@ export function PaymentModal({ isOpen, onOpenChange }: PaymentModalProps) {
                     <Tabs
                         defaultValue="cash"
                         onValueChange={(val) =>
-                            setPaymentStatus(val as "cash" | "credit")
+                            handlePaymentStatus(val as "cash" | "credit")
                         }
                     >
                         <TabsList className="grid w-full grid-cols-2 h-11 bg-muted p-1 rounded-lg">
@@ -105,6 +154,7 @@ export function PaymentModal({ isOpen, onOpenChange }: PaymentModalProps) {
                                 <Input
                                     id="cash-input"
                                     type="number"
+                                    value={cashAmount === 0 ? "" : cashAmount}
                                     placeholder="Masukkan nominal..."
                                     className="text-lg font-bold py-5"
                                     onChange={(e) =>
@@ -119,11 +169,11 @@ export function PaymentModal({ isOpen, onOpenChange }: PaymentModalProps) {
                                     Kembalian:
                                 </span>
                                 <span
-                                    className={`text-lg font-black ${changeAmount >= 0 ? "text-emerald-500" : "text-destructive"}`}
+                                    className={`text-lg font-black ${cashBack >= 0 ? "text-emerald-500" : "text-destructive"}`}
                                 >
                                     Rp{" "}
-                                    {changeAmount >= 0
-                                        ? changeAmount.toLocaleString("id-ID")
+                                    {cashBack >= 0
+                                        ? cashBack.toLocaleString("id-ID")
                                         : "0"}
                                 </span>
                             </div>
@@ -140,10 +190,11 @@ export function PaymentModal({ isOpen, onOpenChange }: PaymentModalProps) {
                                 <Input
                                     id="dp-input"
                                     type="number"
+                                    value={cashAmount === 0 ? "" : cashAmount}
                                     placeholder="Ketik 0 jika tanpa DP..."
                                     className="text-lg font-bold py-5 text-amber-600 focus-visible:ring-amber-500"
                                     onChange={(e) =>
-                                        setDownPayment(
+                                        setCashAmount(
                                             Number(e.target.value) || 0,
                                         )
                                     }
@@ -165,6 +216,7 @@ export function PaymentModal({ isOpen, onOpenChange }: PaymentModalProps) {
                 </div>
 
                 <Button
+                    disabled={isPending}
                     size="lg"
                     className={`w-full font-bold text-base py-5 rounded-xl transition-all ${
                         paymentStatus === "credit"

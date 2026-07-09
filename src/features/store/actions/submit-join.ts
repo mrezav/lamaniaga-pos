@@ -8,7 +8,7 @@ import {
     applyCode,
     findStoreMember,
 } from "../repositories";
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/utils";
 
 export async function submitJoinCodeAction(input: JoinStoreInput) {
     try {

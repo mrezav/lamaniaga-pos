@@ -10,6 +10,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ProductListItem, ProductVariantItem } from "@/features/product/types";
+import { formatIDR } from "@/utils";
 
 interface ProductCardProps {
     product: ProductListItem;
@@ -24,39 +25,59 @@ export function ProductCard({ product }: ProductCardProps) {
     const hasMultipleVariants = product.variants.length > 1;
 
     const handleAddVariantToCart = (variant: ProductVariantItem) => {
+        const attributeParts = [
+            product.merk,
+            variant.attributes?.size,
+            variant.attributes?.color,
+        ].filter(Boolean);
+        const itemName = `${product.name} (${attributeParts.join(" ")})`;
         // Masukkan ke Zustand dengan menggabungkan nama produk + SKU sebagai penanda di Cart
         addToCart({
             id: variant.id, // ID Unik di Cart menggunakan ID Variant, bukan ID Produk parent
-            name: `${product.name}`,
+            productId: product.id,
+            name: itemName,
+            sku: variant.sku,
             price: Number(variant.price),
-            variant: variant,
             stock: variant.stock,
         });
     };
 
     return (
-        <div className="group bg-card rounded-xl border p-3 flex flex-col justify-between hover:border-primary/40 hover:shadow-md transition-all">
+        <div className="group bg-card rounded-xl border p-2 flex flex-col justify-between hover:border-primary/40 hover:shadow-md transition-all">
             <div>
-                <div className="aspect-square w-full rounded-lg bg-muted mb-2 flex flex-col items-center justify-center text-muted-foreground p-2 text-center">
-                    <span className="text-[10px] uppercase font-bold text-muted-foreground/60">
-                        {product.merk}
-                    </span>
-                    <span className="text-xs font-medium mt-1 truncate w-full">
-                        {product.categoryName}
-                    </span>
+                <div className="aspect-square w-full rounded-lg bg-muted mb-2 flex flex-col items-center justify-center text-muted-foreground p-0.5 text-center">
+                    {product.imageUrl ? (
+                        <img
+                            src={product.imageUrl}
+                            alt="Product Cart"
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        <>
+                            <span className="text-[10px] uppercase font-bold text-muted-foreground/60">
+                                {product.merk}
+                            </span>
+                            <span className="text-xs font-medium mt-1 truncate w-full">
+                                {product.categoryName}
+                            </span>
+                        </>
+                    )}
                 </div>
-                <h4 className="font-semibold text-sm line-clamp-2 leading-tight">
-                    {product.name}
+                <h4 className="font-semibold text-sm mx-2 line-clamp-2 leading-tight">
+                    {product.name}{" "}
+                    <span className="text-xs text-muted-foreground">
+                        ({product.merk})
+                    </span>
                 </h4>
             </div>
 
-            <div className="mt-3 flex items-center justify-between gap-1">
+            <div className="my-3 mx-2 flex items-center justify-between gap-1">
                 <div className="flex flex-col">
                     <span className="text-[10px] text-muted-foreground leading-none">
                         {hasMultipleVariants ? "Mulai dari" : "Harga"}
                     </span>
-                    <span className="font-bold text-sm text-primary">
-                        Rp {minPrice.toLocaleString("id-ID")}
+                    <span className="text-base font-semibold text-foreground tabular-nums">
+                        {formatIDR(minPrice)}
                     </span>
                 </div>
 
@@ -75,7 +96,7 @@ export function ProductCard({ product }: ProductCardProps) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
                             align="end"
-                            className="w-48 rounded-xl"
+                            className="w-56 rounded-xl"
                         >
                             {product.variants.map((variant) => (
                                 <DropdownMenuItem
@@ -98,33 +119,53 @@ export function ProductCard({ product }: ProductCardProps) {
                                                 ? variant.attributes.color
                                                 : ""}
                                         </span>
-                                        <span className="text-[10px] text-muted-foreground">
-                                            Stok: {variant.stock} {variant.unit}
+                                        <span className="text-[10px]">
+                                            Stok:{" "}
+                                            <strong
+                                                className={
+                                                    variant.stock > 10
+                                                        ? "text-emerald-600 dark:text-emerald-500"
+                                                        : "text-amber-600"
+                                                }
+                                            >
+                                                {variant.stock} {variant.unit}
+                                            </strong>
                                         </span>
                                     </div>
                                     <span className="font-bold text-primary">
-                                        Rp{" "}
-                                        {Number(variant.price).toLocaleString(
-                                            "id-ID",
-                                        )}
+                                        {formatIDR(Number(variant.price))}
                                     </span>
                                 </DropdownMenuItem>
                             ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 ) : (
-                    // Jika hanya ada 1 varian, langsung eksekusi tanpa dropdown
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 w-8 p-0 rounded-full bg-primary/5 hover:bg-primary text-primary hover:text-white border-primary/20"
-                        disabled={product.variants[0]?.stock === 0}
-                        onClick={() =>
-                            handleAddVariantToCart(product.variants[0])
-                        }
-                    >
-                        <Plus className="h-4 w-4" />
-                    </Button>
+                    <div>
+                        <span className="mx-2 text-xs text-muted text-slate-600">
+                            Stok:{" "}
+                            <strong
+                                className={
+                                    product.variants[0].stock > 10
+                                        ? "text-emerald-600 dark:text-emerald-500"
+                                        : "text-amber-600"
+                                }
+                            >
+                                {product.variants[0].stock}{" "}
+                                {product.variants[0].unit}
+                            </strong>
+                        </span>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 w-8 p-0 rounded-full bg-primary/5 hover:bg-primary text-primary hover:text-white border-primary/20"
+                            disabled={product.variants[0]?.stock === 0}
+                            onClick={() =>
+                                handleAddVariantToCart(product.variants[0])
+                            }
+                        >
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    </div>
                 )}
             </div>
         </div>
