@@ -14,7 +14,7 @@ import {
     check,
     uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { users } from "./users";
 import { stores } from "./stores";
 import { categories } from "./categories";
@@ -31,7 +31,6 @@ export const products = pgTable(
         description: text(),
         imageUrl: text("image_url"),
         isActive: boolean("is_active").default(true),
-
         // Audit Trail Columns
         createdAt: timestamp("created_at", {
             withTimezone: true,
@@ -71,13 +70,17 @@ export const products = pgTable(
         }),
 
         // Catatan Unik: Idealnya slug unik per toko: unique().on(table.storeId, table.slug)
-        // unique("products_slug_key").on(table.storeId, table.slug),
+        unique("products_slug_unique").on(table.storeId, table.slug),
+
         // Menggunakan Partial Index - Aman untuk Soft Delete
         uniqueIndex("products_store_slug_partial_idx")
             .on(table.storeId, table.slug)
             .where(sql`deleted_at IS NULL`),
+
         index("products_store_id_idx").on(table.storeId),
         index("products_category_id_idx").on(table.categoryId),
+        index("products_name_idx").on(table.name),
+
         // ⚡ INDEKS GIN UNTUK FULL-TEXT SEARCH
         index("products_fts_idx").using(
             "gin",
@@ -92,9 +95,9 @@ export const productVariants = pgTable(
     {
         id: uuid().defaultRandom().primaryKey().notNull(),
         productId: uuid("product_id"),
-        sku: text(),
+        sku: text().notNull(),
         price: numeric({ precision: 15, scale: 2 }).default("0").notNull(),
-        stock: integer().default(0).notNull(),
+        stock: numeric({ precision: 8, scale: 2 }).default("0").notNull(),
         unit: text("unit").notNull().default("pcs"),
         // attributes: jsonb().default({}).notNull(),
         // Menentikan properti ini hanya dimiliki oleh sebagian kecil produk, dan jika nilainya berbeda, ia berpotensi mengubah harga atau stok seperti (ukuran dan warna)
@@ -141,8 +144,14 @@ export const productVariants = pgTable(
             to: ["public"],
             using: sql`store_id IN (SELECT owned_store_ids())`,
         }),
+        // 👈 WAJIB TAMBAHKAN INI: Membuat kombinasi kedua kolom menjadi unik
+        unique("product_variants_product_id_unique").on(
+            table.id,
+            table.productId,
+        ),
 
-        unique("product_variants_sku_key").on(table.sku),
+        unique("product_variants_sku_unique").on(table.storeId, table.sku),
+        index("product_variants_sku_idx").on(table.sku),
 
         // Menggunakan index Btree optimasi tinggi hasil tarikan live database kamu
         index("product_variants_product_id_idx").using(
@@ -164,3 +173,22 @@ export type ProductRow = typeof products.$inferSelect;
 export type NewProductInput = Omit<typeof products.$inferInsert, "id">;
 export type ProductVariantRow = typeof productVariants.$inferSelect;
 export type NewVariantInput = Omit<typeof productVariants.$inferInsert, "id">;
+
+export const productsRelations = relations(products, ({ one, many }) => ({
+    category: one(categories, {
+        fields: [products.categoryId],
+        references: [categories.id],
+    }),
+
+    variants: many(productVariants),
+}));
+
+export const productVariantsRelations = relations(
+    productVariants,
+    ({ one }) => ({
+        product: one(products, {
+            fields: [productVariants.productId],
+            references: [products.id],
+        }),
+    }),
+);

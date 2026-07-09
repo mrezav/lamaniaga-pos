@@ -10,8 +10,9 @@ import {
     createProductVariants,
 } from "@/features/product/repositories";
 import { revalidatePath } from "next/cache";
-import { getErrorMessage } from "@/lib/utils";
-import { uploadFile } from "@/lib/storage";
+import { generateSku, getErrorMessage } from "@/utils";
+import { deleteFileBulk, uploadFile } from "@/lib/storage";
+import { db } from "@/db";
 
 export async function createProductAction(
     formData: FormData,
@@ -44,9 +45,9 @@ export async function createProductAction(
             imageFile: formData.get("imageFile") as File | null,
         };
 
-        // console.log("================== DATA MASUK DARI UI ==================");
-        // console.log(rawData);
-        // console.log("========================================================");
+        console.log("================== DATA MASUK DARI UI ==================");
+        console.log(rawData);
+        console.log("========================================================");
 
         // --- STEP 2: VALIDASI MENGGUNAKAN ZOD ---
         const validation = productSchema.safeParse(rawData);
@@ -67,56 +68,83 @@ export async function createProductAction(
         const data = validation.data;
         const productSlug = await generateProductSlug(data.name, store.id);
 
-        const product = await createProduct({
-            name: data.name,
-            merk: data.merk,
-            slug: productSlug,
-            description: data.description ?? null,
-            categoryId: data.categoryId ?? null,
-            imageUrl: imageUrl ?? null,
-            isActive: data.isActive,
-            storeId: store.id,
+        // 1. Bungkus seluruh proses penulisan DB ke dalam db.transaction
+        const result = await db.transaction(async (tx) => {
+            // Pastikan fungsi createProduct Anda menerima parameter `tx` opsional di dalamnya,
+            // Contoh internalnya: (payload) => tx.insert(products).values(payload)...
+            const product = await createProduct(
+                {
+                    name: data.name,
+                    merk: data.merk,
+                    slug: productSlug,
+                    description: data.description ?? null,
+                    categoryId: data.categoryId ?? null,
+                    imageUrl: imageUrl ?? null,
+                    isActive: data.isActive,
+                    storeId: store.id,
+                },
+                tx,
+            ); // 👈 OPER `tx` KE SINI
+
+            const defaultVariant = data.variants[0];
+
+            const variantPayloads = data.hasVariants
+                ? data.variants.map((variant) => {
+                      // Jika user tidak isi SKU, otomatis generate lewat nama toko & produk
+                      const finalSku =
+                          variant.sku && variant.sku.trim() !== ""
+                              ? variant.sku
+                              : generateSku(data.name, data.merk);
+
+                      return {
+                          productId: product.id,
+                          sku: finalSku,
+                          price: variant.price.toString(),
+                          stock: variant.stock.toString(),
+                          unit: variant.unit,
+                          attributes: {
+                              size: variant.size || "",
+                              color: variant.color || "",
+                          },
+                          storeId: store.id,
+                      };
+                  })
+                : [
+                      {
+                          productId: product.id,
+                          // Fallback auto-generate untuk default variant
+                          sku:
+                              defaultVariant?.sku &&
+                              defaultVariant.sku.trim() !== ""
+                                  ? defaultVariant.sku
+                                  : generateSku(data.name, data.merk),
+                          price: (defaultVariant?.price ?? 0).toString(),
+                          stock: (defaultVariant?.stock ?? 0).toString(),
+                          unit: defaultVariant?.unit || "pcs",
+                          attributes: {
+                              size: defaultVariant?.size || "",
+                              color: defaultVariant?.color || "",
+                          },
+                          storeId: store.id,
+                      },
+                  ];
+
+            // Oper `tx` ke fungsi create variants agar dieksekusi di transaksi yang sama
+            return await createProductVariants(variantPayloads, tx); // 👈 OPER `tx` KE SINI
         });
 
-        // Ambil variant pertama sebagai fallback jika tidak memiliki varian khusus
-        const defaultVariant = data.variants[0];
+        //  Hapus image produk jika insert data gagal
+        if (!result && imageUrl) {
+            await deleteFileBulk([imageUrl]);
+        }
 
-        const variantPayloads = data.hasVariants
-            ? data.variants.map((variant) => ({
-                  productId: product.id,
-                  sku: variant.sku,
-                  price: variant.price.toString(), // 👈 KUNCI: Konversi number ke string untuk Drizzle decimal
-                  stock: variant.stock,
-                  unit: variant.unit,
-                  attributes: {
-                      size: variant.size || "",
-                      color: variant.color || "",
-                  },
-                  storeId: store.id,
-              }))
-            : [
-                  {
-                      productId: product.id,
-                      sku: defaultVariant?.sku || "",
-                      price: (defaultVariant?.price ?? 0).toString(), // 👈 KUNCI: Konversi number ke string
-                      stock: defaultVariant?.stock ?? 0,
-                      unit: defaultVariant?.unit || "pcs",
-                      attributes: {
-                          size: defaultVariant?.size || "",
-                          color: defaultVariant?.color || "",
-                      },
-                      storeId: store.id,
-                  },
-              ];
-
-        // Sekarang variantPayloads dijamin 100% klop dengan tipe NewVariantInput[]
-        await createProductVariants(variantPayloads);
-
+        // 2. Revalidate dipanggil DI LUAR transaksi setelah dipastikan sukses commit
         revalidatePath(`/stores/${storeSlug}/products`);
 
         return { success: true };
     } catch (error: unknown) {
+        console.error(getErrorMessage(error));
         // Tambahkan catch block agar penanganan error asinkronus lebih aman
-        return { success: false, error: getErrorMessage(error) };
+        return { success: false, error: "terjadi kesalahan internal" };
     }
 }

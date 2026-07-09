@@ -1,14 +1,14 @@
 "use server";
 
 import { findProductById } from "../repositories/find-one";
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/utils";
 import { checkPermission } from "@/lib/permission";
 import { getStoreBySlug } from "@/lib/store";
 import { UserAction } from "@/types";
 
 export default async function getProductByIdAction(
-    storeSlug: string,
     productId: string,
+    storeSlug: string,
     userAction: UserAction,
 ) {
     try {

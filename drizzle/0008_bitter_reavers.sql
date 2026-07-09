@@ -1,2 +1,0 @@
-CREATE INDEX "categories_fts_idx" ON "categories" USING gin (to_tsvector('indonesian', "name"));--> statement-breakpoint
-CREATE INDEX "products_fts_idx" ON "products" USING gin (to_tsvector('indonesian', "name" || ' ' || COALESCE("merk", '')));

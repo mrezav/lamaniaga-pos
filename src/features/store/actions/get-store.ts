@@ -3,7 +3,7 @@
 import { verifyAuth } from "@/lib/auth";
 import { checkPermission } from "@/lib/permission";
 import { getStoreBySlug } from "@/lib/store";
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/utils";
 import { UserAction } from "@/types";
 
 export async function getStoreAction(storeSlug: string) {

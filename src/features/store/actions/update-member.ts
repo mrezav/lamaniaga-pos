@@ -4,7 +4,7 @@ import { verifyAuth } from "@/lib/auth";
 import { checkPermission } from "@/lib/permission";
 import { updateMemberStatus } from "../repositories";
 import { MemberStatus } from "@/db/schema";
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/utils";
 import { UserAction } from "@/types";
 
 export async function updateMemberStatusAction(

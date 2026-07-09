@@ -1,7 +1,7 @@
 export const PERMISSIONS = {
     category: {
-        create: ["owner", "manager"],
-        edit: ["owner", "manager"],
+        create: ["owner", "manager", "cashier"],
+        edit: ["owner", "manager", "cashier"],
         delete: ["owner"],
         view: ["owner", "manager", "cashier"],
     },
@@ -18,7 +18,7 @@ export const PERMISSIONS = {
         view: ["owner", "manager", "cashier"],
     },
     product: {
-        create: ["owner", "manager"],
+        create: ["owner", "manager", "cashier"],
         edit: ["owner", "manager"],
         delete: ["owner"],
         view: ["owner", "manager", "cashier"],
@@ -26,6 +26,12 @@ export const PERMISSIONS = {
     store: {
         create: ["owner", "manager"],
         edit: ["owner", "manager"],
+        delete: ["owner", "manager"],
+        view: ["owner", "manager", "cashier"],
+    },
+    transaction: {
+        create: ["owner", "manager", "cashier"],
+        edit: ["owner", "manager", "cashier"],
         delete: ["owner", "manager"],
         view: ["owner", "manager", "cashier"],
     },
@@ -40,3 +46,10 @@ export const UserAction = {
 } as const;
 export type UserAction = (typeof UserAction)[keyof typeof UserAction];
 // Ambil value dengan cara UserAction.CREATE
+
+export interface Pagination {
+    page: number;
+    limit: number;
+    totalItems: number;
+    totalPages: number;
+}

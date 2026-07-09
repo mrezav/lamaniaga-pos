@@ -7,29 +7,44 @@ import {
     desc,
     eq,
     ilike,
+    inArray,
     or,
     SQL,
     sql,
 } from "drizzle-orm";
 import { count } from "drizzle-orm";
+import {
+    FindProductsParams,
+    FindProductsResponse,
+    ProductVariantItem,
+} from "../types";
 
-interface FindProductsParams {
-    storeId: string;
-    search?: string;
-    page?: number;
-    limit?: number;
-    sortBy?: "name" | "createdAt";
-    sortOrder?: "asc" | "desc";
+export async function findVariantsByIds(variantIds: string[]) {
+    return await db
+        .select({
+            id: productVariants.id,
+            sku: productVariants.sku,
+            price: productVariants.price,
+            stock: productVariants.stock,
+            attributes: productVariants.attributes,
+            productId: products.id,
+            productName: products.name,
+            productMerk: products.merk,
+        })
+        .from(productVariants)
+        .innerJoin(products, eq(productVariants.productId, products.id))
+        .where(inArray(productVariants.id, variantIds));
 }
 
 export async function findProductsByStoreId({
     storeId,
     search = "",
+    categoryId = "",
     page = 1,
     limit = 10,
     sortBy = "createdAt",
     sortOrder = "desc",
-}: FindProductsParams) {
+}: FindProductsParams): Promise<FindProductsResponse> {
     const conditions: SQL[] = [eq(products.storeId, storeId)];
     let searchOrderBy: SQL | undefined = undefined;
 
@@ -54,6 +69,9 @@ export async function findProductsByStoreId({
             searchOrderBy = sql`ts_rank(${documentVector}, ${searchQuery}) DESC`;
         }
     }
+    if (categoryId !== "" && categoryId !== "all") {
+        conditions.push(eq(products.categoryId, categoryId));
+    }
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     const orderClause =
@@ -73,6 +91,7 @@ export async function findProductsByStoreId({
                 id: products.id,
                 name: products.name,
                 merk: products.merk,
+                imageUrl: products.imageUrl,
                 slug: products.slug,
                 isActive: products.isActive,
                 description: products.description,
@@ -81,21 +100,14 @@ export async function findProductsByStoreId({
                 categoryName: categories.name,
 
                 // Agregasi relasi One-to-Many (Varian) menjadi array JSON
-                variants: sql<
-                    Array<{
-                        id: string;
-                        sku: string;
-                        price: string;
-                        stock: number;
-                        unit: string;
-                    }>
-                >`COALESCE(
+                variants: sql<ProductVariantItem[]>`COALESCE(
             json_agg(
               json_build_object(
                 'id', ${productVariants.id},
                 'sku', ${productVariants.sku},
                 'price', ${productVariants.price},
                 'stock', ${productVariants.stock},
+                'attributes', ${productVariants.attributes},
                 'unit', ${productVariants.unit}
               )
             ) FILTER (WHERE ${productVariants.id} IS NOT NULL), 

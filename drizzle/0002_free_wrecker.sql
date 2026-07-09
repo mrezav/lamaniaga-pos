@@ -1,1 +1,0 @@
-CREATE INDEX "stores_slug_unique" ON "stores" USING btree ("slug");

@@ -2,8 +2,17 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
+    const pathname = request.nextUrl.pathname;
+
+    // 1. Suntikkan pathname aktif ke dalam request headers agar bisa dibaca Server Component
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-current-path", pathname);
+
+    // 2. Inisialisasi response awal dengan membawa headers baru tersebut
     let supabaseResponse = NextResponse.next({
-        request,
+        request: {
+            headers: requestHeaders,
+        },
     });
 
     const supabase = createServerClient(
@@ -33,8 +42,6 @@ export async function updateSession(request: NextRequest) {
     const {
         data: { user },
     } = await supabase.auth.getUser();
-
-    const pathname = request.nextUrl.pathname;
 
     // Rute-rute yang boleh diakses tanpa login
     const isPublicRoute =

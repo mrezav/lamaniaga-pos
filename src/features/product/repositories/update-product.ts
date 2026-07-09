@@ -37,9 +37,9 @@ export async function updateProduct(
                 // INSERT: Bentuk objek yang strict mematuhi aturan InferInsertModel Drizzle
                 const insertPayload: DBVariantInsert = {
                     productId: productId,
-                    sku: variant.sku,
+                    sku: variant.sku ?? "",
                     price: variant.price.toString(),
-                    stock: Number(variant.stock),
+                    stock: variant.stock.toString(),
                     unit: variant.unit,
                     attributes: dbAttributes,
                     storeId: validatedData.storeId,
@@ -49,9 +49,9 @@ export async function updateProduct(
             } else {
                 // UPDATE: Kita bentuk payload khusus update (bisa partial)
                 const updatePayload = {
-                    sku: variant.sku,
+                    sku: variant.sku ?? "",
                     price: variant.price.toString(),
-                    stock: Number(variant.stock),
+                    stock: variant.stock.toString(),
                     unit: variant.unit,
                     attributes: dbAttributes,
                     storeId: validatedData.storeId,

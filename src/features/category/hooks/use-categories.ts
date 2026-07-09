@@ -1,3 +1,5 @@
+"use client";
+
 import { useQuery } from "@tanstack/react-query";
 import { getCategoriesAction } from "../actions";
 import { getCategoryListAction } from "@/features/product/actions";
@@ -11,10 +13,10 @@ interface useCategoriesProps {
     sortOrder?: "asc" | "desc";
 }
 
-export const useCategories = (filters: useCategoriesProps) => {
+export function useCategories(filters: useCategoriesProps) {
     const { storeSlug, search, page, limit, sortBy, sortOrder } = filters;
 
-    const getCategoriesQuery = useQuery({
+    return useQuery({
         // 1. QUERY KEY: Dibuat flat dan terbaca jelas dari kiri ke kanan (Umum -> Spesifik)
         queryKey: [
             "categories",
@@ -37,8 +39,10 @@ export const useCategories = (filters: useCategoriesProps) => {
         placeholderData: (previousData) => previousData,
         staleTime: 1000 * 30, // Data dianggap segar selama 30 detik
     });
+}
 
-    const getCategoryListQuery = useQuery({
+export function useCategoryList(storeSlug: string) {
+    return useQuery({
         queryKey: ["category-list", storeSlug],
         queryFn: async () => {
             const result = await getCategoryListAction(storeSlug);
@@ -49,9 +53,4 @@ export const useCategories = (filters: useCategoriesProps) => {
             return result.data;
         },
     });
-
-    return {
-        getCategoriesQuery,
-        getCategoryListQuery,
-    };
-};
+}
