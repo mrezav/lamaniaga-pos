@@ -19,7 +19,7 @@ export const PERMISSIONS = {
     },
     product: {
         create: ["owner", "manager", "cashier"],
-        edit: ["owner", "manager", "cashier"],
+        edit: ["owner", "manager"],
         delete: ["owner"],
         view: ["owner", "manager", "cashier"],
     },

@@ -93,7 +93,7 @@ export async function createCheckoutInvoice(
                 transactionId: newTransaction.id,
                 amountPaid: input.amountPaid.toString(),
                 paymentMethod: input.paymentMethod,
-                notes: input.isInstallment
+                note: input.isInstallment
                     ? `Pembayaran cicilan awal sebesar Rp ${input.amountPaid.toLocaleString("id-ID")}`
                     : "Pembayaran lunas di kasir",
             });

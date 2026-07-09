@@ -14,7 +14,7 @@ import {
     check,
     uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { users } from "./users";
 import { stores } from "./stores";
 import { categories } from "./categories";
@@ -70,13 +70,17 @@ export const products = pgTable(
         }),
 
         // Catatan Unik: Idealnya slug unik per toko: unique().on(table.storeId, table.slug)
-        // unique("products_slug_key").on(table.storeId, table.slug),
+        unique("products_slug_unique").on(table.storeId, table.slug),
+
         // Menggunakan Partial Index - Aman untuk Soft Delete
         uniqueIndex("products_store_slug_partial_idx")
             .on(table.storeId, table.slug)
             .where(sql`deleted_at IS NULL`),
+
         index("products_store_id_idx").on(table.storeId),
         index("products_category_id_idx").on(table.categoryId),
+        index("products_name_idx").on(table.name),
+
         // ⚡ INDEKS GIN UNTUK FULL-TEXT SEARCH
         index("products_fts_idx").using(
             "gin",
@@ -169,3 +173,22 @@ export type ProductRow = typeof products.$inferSelect;
 export type NewProductInput = Omit<typeof products.$inferInsert, "id">;
 export type ProductVariantRow = typeof productVariants.$inferSelect;
 export type NewVariantInput = Omit<typeof productVariants.$inferInsert, "id">;
+
+export const productsRelations = relations(products, ({ one, many }) => ({
+    category: one(categories, {
+        fields: [products.categoryId],
+        references: [categories.id],
+    }),
+
+    variants: many(productVariants),
+}));
+
+export const productVariantsRelations = relations(
+    productVariants,
+    ({ one }) => ({
+        product: one(products, {
+            fields: [productVariants.productId],
+            references: [products.id],
+        }),
+    }),
+);

@@ -111,10 +111,14 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
                             <SelectItem value="createdAt-desc">
-                                Urutkan: Terbaru
+                                Terbaru
                             </SelectItem>
-                            <SelectItem value="name-asc">
-                                Urutkan: Nama (A-Z)
+                            <SelectItem value="createdAt-asc">
+                                Terlama
+                            </SelectItem>
+                            <SelectItem value="name-asc">Nama (A-Z)</SelectItem>
+                            <SelectItem value="name-desc">
+                                Nama (Z-A)
                             </SelectItem>
                         </SelectContent>
                     </Select>
@@ -131,7 +135,7 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>No</TableHead>
+                                <TableHead className="text-center">#</TableHead>
                                 <TableHead>Nama Kategori</TableHead>
                                 <TableHead>Slug</TableHead>
                                 <TableHead>Deskripsi</TableHead>
@@ -151,13 +155,13 @@ export function CategoryTable({ storeSlug }: { storeSlug: string }) {
                             ) : (
                                 items.map((cat, index) => (
                                     <TableRow key={cat.id}>
-                                        <TableCell>
+                                        <TableCell className="text-center">
                                             {numberList(index)}
                                         </TableCell>
                                         <TableCell className="font-medium">
                                             {cat.name}
                                         </TableCell>
-                                        <TableCell className="font-mono text-xs">
+                                        <TableCell className="font-medium">
                                             {cat.slug}
                                         </TableCell>
                                         <TableCell className="text-muted-foreground">

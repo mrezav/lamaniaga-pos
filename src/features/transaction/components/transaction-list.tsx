@@ -9,6 +9,7 @@ import {
     Wallet2,
     LayoutGrid,
     List,
+    Loader2,
 } from "lucide-react";
 import {
     Select,
@@ -37,6 +38,7 @@ import PaginationSection from "@/components/shared/PaginationSection";
 import { TransactionGrid } from "./transaction-grid";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TransactionTable } from "./transaction-table";
+import LoadingSection from "@/components/shared/LoadingSection";
 
 interface Props {
     storeId: string;
@@ -315,10 +317,14 @@ export default function TransactionList({ storeId, storeSlug }: Props) {
 
                     {/* Konten Grid / Card */}
                     <TabsContent value="grid" className="mt-0">
-                        <TransactionGrid
-                            storeSlug={storeSlug}
-                            transactions={transactions}
-                        ></TransactionGrid>
+                        {isLoading ? (
+                            <LoadingSection></LoadingSection>
+                        ) : (
+                            <TransactionGrid
+                                storeSlug={storeSlug}
+                                transactions={transactions}
+                            ></TransactionGrid>
+                        )}
                     </TabsContent>
 
                     {/* Konten Table / List */}

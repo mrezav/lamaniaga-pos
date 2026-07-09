@@ -7,8 +7,8 @@ import { getStoreBySlug } from "@/lib/store";
 import { UserAction } from "@/types";
 
 export default async function getProductByIdAction(
-    storeSlug: string,
     productId: string,
+    storeSlug: string,
     userAction: UserAction,
 ) {
     try {

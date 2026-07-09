@@ -60,7 +60,12 @@ export const formatters = {
     }),
 
     dateTime: new Intl.DateTimeFormat("id-ID", {
-        dateStyle: "medium",
+        dateStyle: "short",
+        timeStyle: "short",
+    }),
+
+    longDateTime: new Intl.DateTimeFormat("id-ID", {
+        dateStyle: "full",
         timeStyle: "short",
     }),
 

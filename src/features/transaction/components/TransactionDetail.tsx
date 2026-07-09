@@ -239,7 +239,7 @@ export function TransactionDetail({
                                 >
                                     <div className="space-y-1">
                                         <p className="font-bold text-slate-700 dark:text-slate-300">
-                                            {payment.notes}
+                                            {payment.note}
                                         </p>
                                         <div className="flex items-center gap-1.5 text-slate-400 font-medium">
                                             <Calendar className="h-3 w-3" />

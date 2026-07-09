@@ -1,7 +1,6 @@
 import {
     pgTable,
     text,
-    integer,
     timestamp,
     uuid,
     foreignKey,
@@ -55,6 +54,8 @@ export const transactions = pgTable(
         storeId: uuid("store_id"),
         userId: uuid("user_id"),
         cashierName: text("cashier_name").notNull(),
+        buyerName: text("buyer_name"),
+        buyerPhone: text("buyer_phone_number"),
         invoiceNumber: text("invoice_number").notNull(),
         subtotal: numeric({ precision: 15, scale: 2 }).notNull(),
         discount: numeric({ precision: 15, scale: 2 }).default("0").notNull(),
@@ -198,7 +199,7 @@ export const transactionPayments = pgTable(
         paymentMethod: text("payment_method", {
             enum: PaymentMethodValues,
         }).notNull(),
-        notes: text("notes"),
+        note: text("note"),
         createdAt: timestamp("created_at", {
             withTimezone: true,
             mode: "string",

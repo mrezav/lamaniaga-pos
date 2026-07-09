@@ -265,14 +265,14 @@ export function EditProductForm({ storeSlug, productId, initialData }: props) {
             </Button>
 
             {/* LIVE PREVIEW BOX */}
-            {/* <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl mt-10">
+            <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl mt-10">
                 <p className="text-xs font-bold text-teal-400 uppercase tracking-wider mb-2">
                     ⚡ Live Preview State Array:
                 </p>
                 <pre className="text-xs font-mono text-slate-300 bg-slate-950/60 p-4 rounded-xl overflow-x-auto max-h-64 border border-slate-800/50">
-                    {JSON.stringify(watchVariants, null, 2)}
+                    {JSON.stringify(initialData, null, 2)}
                 </pre>
-            </div> */}
+            </div>
         </form>
     );
 }

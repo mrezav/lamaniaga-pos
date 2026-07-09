@@ -23,6 +23,8 @@ import { useCategoryList } from "@/features/category/hooks/use-categories";
 import { useProfile } from "@/features/user/hooks/use-profile";
 import CashierHeader from "./CashierHeader";
 import { ProfileRow } from "@/db/schema";
+import LoadingSection from "@/components/shared/LoadingSection";
+import EmptySection from "@/components/shared/EmptySection";
 
 interface Props {
     storeSlug: string;
@@ -128,17 +130,13 @@ export default function CashierClientView({ storeSlug }: Props) {
                     </div>
 
                     {isLoading ? (
-                        <div className="grid m-auto justify-items-center items-center text-center gap-2">
-                            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                            Mengambil data...
+                        <div className="grid m-auto justify-items-center items-center text-center">
+                            <LoadingSection></LoadingSection>
                         </div>
                     ) : items.length < 1 ? (
-                        <div className="grid m-auto justify-items-center items-center text-center gap-2">
-                            <SearchAlert className="h-12 w-12" />
-                            <p>Produk tidak ditemukan</p>
-                        </div>
+                            <EmptySection></EmptySection>
                     ) : (
-                        <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-3 items-start">
+                        <div className="overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 items-start">
                             {items.map((product) => (
                                 <ProductCard
                                     key={product.id}

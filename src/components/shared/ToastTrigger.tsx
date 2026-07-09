@@ -16,7 +16,6 @@ export function ToastTrigger() {
         if (trigger === "unauthorized") {
             // 1. Pemicu toast Sonner
             toast.error("Anda tidak memiliki akses untuk aksi ini.");
-            console.log("trigger");
 
             // 2. Bersihkan URL tanpa melakukan refresh halaman
             const params = new URLSearchParams(searchParams.toString());

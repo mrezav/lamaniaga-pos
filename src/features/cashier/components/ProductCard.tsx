@@ -10,6 +10,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ProductListItem, ProductVariantItem } from "@/features/product/types";
+import { formatIDR } from "@/utils";
 
 interface ProductCardProps {
     product: ProductListItem;
@@ -42,9 +43,9 @@ export function ProductCard({ product }: ProductCardProps) {
     };
 
     return (
-        <div className="group bg-card rounded-xl border p-3 flex flex-col justify-between hover:border-primary/40 hover:shadow-md transition-all">
+        <div className="group bg-card rounded-xl border p-2 flex flex-col justify-between hover:border-primary/40 hover:shadow-md transition-all">
             <div>
-                <div className="aspect-square w-full rounded-lg bg-muted mb-2 flex flex-col items-center justify-center text-muted-foreground p-2 text-center">
+                <div className="aspect-square w-full rounded-lg bg-muted mb-2 flex flex-col items-center justify-center text-muted-foreground p-0.5 text-center">
                     {product.imageUrl ? (
                         <img
                             src={product.imageUrl}
@@ -62,7 +63,7 @@ export function ProductCard({ product }: ProductCardProps) {
                         </>
                     )}
                 </div>
-                <h4 className="font-semibold text-sm line-clamp-2 leading-tight">
+                <h4 className="font-semibold text-sm mx-2 line-clamp-2 leading-tight">
                     {product.name}{" "}
                     <span className="text-xs text-muted-foreground">
                         ({product.merk})
@@ -70,13 +71,13 @@ export function ProductCard({ product }: ProductCardProps) {
                 </h4>
             </div>
 
-            <div className="mt-3 flex items-center justify-between gap-1">
+            <div className="my-3 mx-2 flex items-center justify-between gap-1">
                 <div className="flex flex-col">
                     <span className="text-[10px] text-muted-foreground leading-none">
                         {hasMultipleVariants ? "Mulai dari" : "Harga"}
                     </span>
                     <span className="text-base font-semibold text-foreground tabular-nums">
-                        Rp {minPrice.toLocaleString("id-ID")}
+                        {formatIDR(minPrice)}
                     </span>
                 </div>
 
@@ -118,15 +119,21 @@ export function ProductCard({ product }: ProductCardProps) {
                                                 ? variant.attributes.color
                                                 : ""}
                                         </span>
-                                        <span className="text-[10px] text-muted-foreground">
-                                            Stok: {variant.stock} {variant.unit}
+                                        <span className="text-[10px]">
+                                            Stok:{" "}
+                                            <strong
+                                                className={
+                                                    variant.stock > 10
+                                                        ? "text-emerald-600 dark:text-emerald-500"
+                                                        : "text-amber-600"
+                                                }
+                                            >
+                                                {variant.stock} {variant.unit}
+                                            </strong>
                                         </span>
                                     </div>
                                     <span className="font-bold text-primary">
-                                        Rp{" "}
-                                        {Number(variant.price).toLocaleString(
-                                            "id-ID",
-                                        )}
+                                        {formatIDR(Number(variant.price))}
                                     </span>
                                 </DropdownMenuItem>
                             ))}
@@ -135,8 +142,17 @@ export function ProductCard({ product }: ProductCardProps) {
                 ) : (
                     <div>
                         <span className="mx-2 text-xs text-muted text-slate-600">
-                            Stok: {product.variants[0].stock}{" "}
-                            {product.variants[0].unit}
+                            Stok:{" "}
+                            <strong
+                                className={
+                                    product.variants[0].stock > 10
+                                        ? "text-emerald-600 dark:text-emerald-500"
+                                        : "text-amber-600"
+                                }
+                            >
+                                {product.variants[0].stock}{" "}
+                                {product.variants[0].unit}
+                            </strong>
                         </span>
                         <Button
                             size="sm"

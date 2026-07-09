@@ -28,7 +28,7 @@ export async function createInstallmentPayment(data: CreatePaymentDTO) {
                     transactionId: data.transactionId,
                     amountPaid: data.amountPaid,
                     paymentMethod: data.paymentMethod,
-                    notes: data.note,
+                    note: data.note,
                 })
                 .returning();
 

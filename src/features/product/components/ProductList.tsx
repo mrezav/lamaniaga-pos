@@ -42,6 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductTable from "./ProductTable";
 import PaginationSection from "@/components/shared/PaginationSection";
 import { useCategoryList } from "@/features/category/hooks/use-categories";
+import LoadingSection from "@/components/shared/LoadingSection";
 
 interface ProductTableProps {
     storeSlug: string;
@@ -102,7 +103,7 @@ export function ProductList({ storeSlug }: ProductTableProps) {
     }
 
     function handleDetail(id: string) {
-        console.log(id);
+        redirect(`/stores/${storeSlug}/products/${id}`);
     }
 
     return (
@@ -273,12 +274,11 @@ export function ProductList({ storeSlug }: ProductTableProps) {
 
                     <TabsContent value="grid" className="mt-0">
                         {isLoading ? (
-                            <div className="flex flex-1 items-center justify-center p-8">
-                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                            </div>
+                            <LoadingSection></LoadingSection>
                         ) : (
                             <ProductGrid
                                 items={items}
+                                handleDetail={handleDetail}
                                 handleDelete={handleDelete}
                                 handleEdit={handleEdit}
                                 isDeleting={isDeleting}

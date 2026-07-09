@@ -7,22 +7,14 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Edit2, Trash2, Box, Image } from "lucide-react";
+import { Edit2, Trash2, Image, Eye, MoreHorizontal } from "lucide-react";
 import { ProductListItem } from "../types";
 import { formatIDR } from "@/utils";
 import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
 
-interface Variant {
-    id: string;
-    sku: string;
-    price: number;
-    stock: number;
-    attributes: { size: string; color: string };
-    unit: string;
-}
-
 interface Props {
     item: ProductListItem;
+    handleDetail: (id: string) => void;
     handleEdit: (id: string) => void;
     handleDelete: (id: string) => void;
     isDeleting: boolean;
@@ -30,6 +22,7 @@ interface Props {
 
 export function ProductCard({
     item,
+    handleDetail,
     handleEdit,
     handleDelete,
     isDeleting,
@@ -45,13 +38,17 @@ export function ProductCard({
             <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
                 {item.imageUrl ? (
                     <img
+                        onClick={() => handleDetail(item.id)}
                         src={item.imageUrl}
                         alt={item.name}
-                        className="h-full w-full object-cover scale-100 object-center transition-transform duration-500 group-hover:scale-102"
+                        className="h-full w-full cursor-pointer object-cover scale-100 object-center transition-transform duration-500 group-hover:scale-102"
                         loading="lazy"
                     />
                 ) : (
-                    <Image className="h-full w-full object-cover scale-100 object-center transition-transform duration-500 group-hover:scale-102">
+                    <Image
+                        onClick={() => handleDetail(item.id)}
+                        className="h-full w-full object-cover cursor-pointer scale-100 object-center transition-transform duration-500 group-hover:scale-102"
+                    >
                         {" "}
                     </Image>
                 )}
@@ -70,7 +67,7 @@ export function ProductCard({
                 </div>
 
                 {/* Tombol Aksi (Edit & Hapus) - Pojok Kanan Bawah Gambar */}
-                <div className="absolute right-2 bottom-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <div className="absolute right-2 bottom-2 opacity-50 group-hover:opacity-100 transition-opacity duration-200">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
@@ -78,15 +75,22 @@ export function ProductCard({
                                 variant="secondary"
                                 className="h-8 w-8 rounded-full shadow bg-background/95 backdrop-blur-sm"
                             >
-                                <MoreVertical className="h-4 w-4" />
+                                <MoreHorizontal className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-32">
                             <DropdownMenuItem
-                                onClick={() => handleEdit(item.id)}
+                                onClick={() => handleDetail(item.id)}
                                 className="cursor-pointer"
                             >
-                                <Edit2 className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
+                                <Eye className="mr-2 h-3.5 w-3.5" />
+                                <span>Detail</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => handleEdit(item.id)}
+                                className="cursor-pointer text-amber-500 focus:text-yellow-500 focus:bg-amber-400/15"
+                            >
+                                <Edit2 className="mr-2 h-3.5 w-3.5" />
                                 <span>Edit</span>
                             </DropdownMenuItem>
                             <DeleteConfirmDialog
@@ -110,7 +114,7 @@ export function ProductCard({
             </div>
 
             {/* 2. Informasi Produk (Dibuat super padat) */}
-            <CardContent className="p-3.5 flex flex-col justify-between flex-1 gap-3">
+            <CardContent className="p-3 flex flex-col justify-between flex-1 gap-3">
                 <div className="space-y-1">
                     {/* Baris Atas: Nama Produk */}
                     <h3 className="font-semibold text-foreground text-sm leading-snug tracking-tight line-clamp-1">
@@ -120,7 +124,7 @@ export function ProductCard({
                     {/* Baris Tengah: Info Stok & Varian yang Sejajar dan Rapi */}
                     <div className="flex items-center justify-between text-xs text-muted-foreground pt-0.5">
                         <div className="flex items-center gap-1">
-                            <Box className="h-3.5 w-3.5 text-muted-foreground/70" />
+                            {/* <Box className="h-3.5 w-3.5 text-muted-foreground/70" /> */}
                             <span>
                                 Stok:{" "}
                                 <strong
@@ -130,7 +134,7 @@ export function ProductCard({
                                             : "text-amber-600"
                                     }
                                 >
-                                    {totalStock} pcs
+                                    {totalStock}
                                 </strong>
                             </span>
                         </div>
@@ -138,7 +142,7 @@ export function ProductCard({
                             {item.variants.slice(0, 3).map((v) => (
                                 <span
                                     key={v.id}
-                                    className="text-[9px] font-medium uppercase px-1 bg-muted border rounded"
+                                    className="text-[9px] font-medium px-1 bg-muted border rounded"
                                 >
                                     {v.attributes && v.attributes.size}
                                 </span>
@@ -154,20 +158,18 @@ export function ProductCard({
 
                 {/* Baris Bawah: Harga */}
                 <div className="pt-2 border-t border-border/50 flex items-center justify-between">
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+                    <span className="text-[15px] text-muted-foreground tracking-wider font-medium">
                         Harga
                     </span>
-                    <p className="font-bold text-foreground text-sm">
-                        {minPrice === maxPrice
-                            ? formatIDR(minPrice)
-                            : `${formatIDR(minPrice)}`}
-                        {minPrice !== maxPrice && (
-                            <span className="text-xs text-muted-foreground font-normal">
-                                {" "}
-                                (Mulai)
-                            </span>
+                    <div className="font-bold text-emerald-600 text-sm">
+                        {item.variants.length == 1 ? (
+                            <div>{formatIDR(minPrice)}</div>
+                        ) : (
+                            <div>
+                                {formatIDR(minPrice)} ~ {formatIDR(maxPrice)}
+                            </div>
                         )}
-                    </p>
+                    </div>
                 </div>
             </CardContent>
         </Card>

@@ -42,11 +42,12 @@ export async function verifyAndDeductStock(
     // 2. LOOPING UNTUK VALIDASI DAN UPDATE STOK LANGSUNG
     for (const cartItem of cartItems) {
         const dbItem = dbVariants.find((v) => v.variantId === cartItem.id);
+        const dbStock = Number(dbItem?.stock);
 
         if (!dbItem) throw new Error("Terjadi kesalahan pencocokan data.");
 
         // Validasi Stok real-time setelah di-lock
-        if (dbItem.stock < cartItem.quantity) {
+        if (dbStock < cartItem.quantity) {
             throw new Error(
                 `Stok terbaru untuk ${dbItem.productName} (${dbItem.sku}) tidak mencukupi.`,
             );
@@ -60,7 +61,7 @@ export async function verifyAndDeductStock(
         // UPDATE STOK LANGSUNG (Menggunakan TX yang sama)
         await tx
             .update(productVariants)
-            .set({ stock: dbItem.stock - cartItem.quantity })
+            .set({ stock: (dbStock - cartItem.quantity).toString() })
             .where(eq(productVariants.id, cartItem.id));
 
         // Kumpulkan data matang untuk di-return (dipakai insert invoice nanti)
