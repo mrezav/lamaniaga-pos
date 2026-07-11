@@ -1,3 +1,4 @@
+import { VoiceMicButton } from "@/components/shared/VoiceMicButton";
 import {
     Control,
     UseFormRegister,
@@ -7,9 +8,12 @@ import {
     FieldArrayPath,
     FieldPath,
     FieldArray,
+    UseFormSetValue,
 } from "react-hook-form";
 
 interface ProductVariantsFormProps<T extends FieldValues> {
+    setValue: UseFormSetValue<any>;
+    storeSlug: string;
     control: Control<T>;
     register: UseFormRegister<T>;
     errors: FieldErrors<T>;
@@ -18,6 +22,8 @@ interface ProductVariantsFormProps<T extends FieldValues> {
 
 // 1. Biarkan T murni extends FieldValues agar Parent bisa melakukan inferensi dengan sempurna
 export default function ProductVariantForm<T extends FieldValues>({
+    setValue,
+    storeSlug,
     control,
     register,
     errors,
@@ -107,15 +113,25 @@ export default function ProductVariantForm<T extends FieldValues>({
                                 <label className="text-xs font-medium text-gray-600">
                                     Harga
                                 </label>
-                                <input
-                                    type="number"
-                                    {...register(
-                                        `variants.${index}.price` as FieldPath<T>,
-                                        { valueAsNumber: true },
-                                    )}
-                                    placeholder="0"
-                                    className="border border-gray-300 p-2 w-full rounded-md text-sm mt-1 outline-none"
-                                />
+                                <div className="relative flex items-center">
+                                    <input
+                                        type="number"
+                                        {...register(
+                                            `variants.${index}.price` as FieldPath<T>,
+                                            { valueAsNumber: true },
+                                        )}
+                                        placeholder="0"
+                                        className="border border-gray-300 p-2 pr-10 w-full rounded-md text-sm mt-1 outline-none"
+                                    />
+                                    <div className="absolute right-2">
+                                        <VoiceMicButton
+                                            fieldName={`variants.${index}.price`}
+                                            fieldType="number"
+                                            setValue={setValue}
+                                            storeSlug={storeSlug}
+                                        />
+                                    </div>
+                                </div>
                                 {variantErrors?.price?.message && (
                                     <p className="text-xs text-red-500 mt-1">
                                         {variantErrors.price.message}
@@ -128,17 +144,27 @@ export default function ProductVariantForm<T extends FieldValues>({
                                 <label className="text-xs font-medium text-gray-600">
                                     Stok
                                 </label>
-                                <input
-                                    type="number"
-                                    step="1"
-                                    min="0"
-                                    {...register(
-                                        `variants.${index}.stock` as FieldPath<T>,
-                                        { valueAsNumber: true },
-                                    )}
-                                    placeholder="0"
-                                    className="border border-gray-300 p-2 w-full rounded-md text-sm mt-1 outline-none"
-                                />
+                                <div className="relative flex items-center">
+                                    <input
+                                        type="number"
+                                        step="1"
+                                        min="0"
+                                        {...register(
+                                            `variants.${index}.stock` as FieldPath<T>,
+                                            { valueAsNumber: true },
+                                        )}
+                                        placeholder="0"
+                                        className="border border-gray-300 p-2 pr-10 w-full rounded-md text-sm mt-1 outline-none"
+                                    />
+                                    <div className="absolute right-2">
+                                        <VoiceMicButton
+                                            fieldName={`variants.${index}.stock`}
+                                            fieldType="number"
+                                            setValue={setValue}
+                                            storeSlug={storeSlug}
+                                        />
+                                    </div>
+                                </div>
                                 {variantErrors?.stock?.message && (
                                     <p className="text-xs text-red-500 mt-1">
                                         {variantErrors.stock.message}
@@ -151,13 +177,23 @@ export default function ProductVariantForm<T extends FieldValues>({
                                 <label className="text-xs font-medium text-gray-600">
                                     Unit
                                 </label>
-                                <input
-                                    {...register(
-                                        `variants.${index}.unit` as FieldPath<T>,
-                                    )}
-                                    placeholder="pcs"
-                                    className="border border-gray-300 p-2 w-full rounded-md text-sm mt-1 outline-none"
-                                />
+                                <div className="relative flex items-center">
+                                    <input
+                                        {...register(
+                                            `variants.${index}.unit` as FieldPath<T>,
+                                        )}
+                                        placeholder="pcs"
+                                        className="border border-gray-300 p-2 w-full rounded-md text-sm mt-1 outline-none"
+                                    />
+                                    <div className="absolute right-2">
+                                        <VoiceMicButton
+                                            fieldName={`variants.${index}.unit`}
+                                            fieldType="text"
+                                            setValue={setValue}
+                                            storeSlug={storeSlug}
+                                        />
+                                    </div>
+                                </div>
                                 {variantErrors?.unit?.message && (
                                     <p className="text-xs text-red-500 mt-1">
                                         {variantErrors.unit.message}
@@ -170,13 +206,23 @@ export default function ProductVariantForm<T extends FieldValues>({
                                 <label className="text-xs font-medium text-gray-600">
                                     Ukuran (Opsional)
                                 </label>
-                                <input
-                                    {...register(
-                                        `variants.${index}.size` as FieldPath<T>,
-                                    )}
-                                    placeholder="L / XL"
-                                    className="border border-gray-300 p-2 w-full rounded-md text-sm mt-1 outline-none"
-                                />
+                                <div className="relative flex items-center">
+                                    <input
+                                        {...register(
+                                            `variants.${index}.size` as FieldPath<T>,
+                                        )}
+                                        placeholder="L / XL"
+                                        className="border border-gray-300 p-2 w-full rounded-md text-sm mt-1 outline-none"
+                                    />
+                                    <div className="absolute right-2">
+                                        <VoiceMicButton
+                                            fieldName={`variants.${index}.size`}
+                                            fieldType="text"
+                                            setValue={setValue}
+                                            storeSlug={storeSlug}
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Input Warna */}
@@ -184,13 +230,23 @@ export default function ProductVariantForm<T extends FieldValues>({
                                 <label className="text-xs font-medium text-gray-600">
                                     Warna (Opsional)
                                 </label>
-                                <input
-                                    {...register(
-                                        `variants.${index}.color` as FieldPath<T>,
-                                    )}
-                                    placeholder="Hitam"
-                                    className="border border-gray-300 p-2 w-full rounded-md text-sm mt-1 outline-none"
-                                />
+                                <div className="relative flex items-center">
+                                    <input
+                                        {...register(
+                                            `variants.${index}.color` as FieldPath<T>,
+                                        )}
+                                        placeholder="Hitam"
+                                        className="border border-gray-300 p-2 w-full rounded-md text-sm mt-1 outline-none"
+                                    />
+                                    <div className="absolute right-2">
+                                        <VoiceMicButton
+                                            fieldName={`variants.${index}.color`}
+                                            fieldType="text"
+                                            setValue={setValue}
+                                            storeSlug={storeSlug}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

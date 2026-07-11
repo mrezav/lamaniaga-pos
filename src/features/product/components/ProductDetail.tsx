@@ -388,7 +388,7 @@ export default function ProductDetail({ productId, storeSlug }: Props) {
                     </div>
                 </div>
 
-                <div className="col-span-12 mt-6 p-4 bg-slate-950 text-slate-200 rounded-xl border border-slate-800 font-mono text-xs shadow-inner">
+                {/* <div className="col-span-12 mt-6 p-4 bg-slate-950 text-slate-200 rounded-xl border border-slate-800 font-mono text-xs shadow-inner">
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
                         <span className="font-bold text-amber-400">
                             🛠️ DEBUGGER: useCartStore Local State
@@ -400,7 +400,7 @@ export default function ProductDetail({ productId, storeSlug }: Props) {
                     <pre className="overflow-x-auto max-h-60 overflow-y-auto scrollbar-thin">
                         {JSON.stringify(product, null, 2)}
                     </pre>
-                </div>
+                </div> */}
             </div>
         </main>
     );

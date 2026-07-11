@@ -1,5 +1,5 @@
 import getProductByIdAction from "@/features/product/actions/get-product";
-import { EditProductForm } from "@/features/product/components/edit-product-form";
+import { EditProductForm } from "@/features/product/components/EditProductForm";
 import { editProductSchema } from "@/features/product/schemas/product-schema";
 import { UserAction } from "@/types";
 import { ChevronLeft } from "lucide-react";

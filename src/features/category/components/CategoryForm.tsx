@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { CategoryInput, categorySchema } from "../schemas/category-schema";
 import { useEffect } from "react";
 import { CategoryRow } from "@/db/schema";
+import { VoiceMicButton } from "@/components/shared/VoiceMicButton";
 
 interface CategoryFormProps {
     storeSlug: string;
@@ -37,6 +38,7 @@ export function CategoryForm({
         handleSubmit,
         reset,
         setError,
+        setValue,
         formState: { errors },
     } = useForm<CategoryInput>({
         resolver: zodResolver(categorySchema),
@@ -140,25 +142,35 @@ export function CategoryForm({
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}
-            className="w-full space-y-6" // Hapus border internal dan buat w-full
+            className="space-y-6 mx-auto" // Hapus border internal dan buat w-full
         >
             {/* GRID LAYOUT UNTUK INPUT */}
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-6 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                 {/* KIRI: INPUT NAMA */}
-                <div className="flex flex-col space-y-2">
+                <div className="space-y-2">
                     <label
                         htmlFor="name"
                         className="text-sm font-semibold text-slate-700"
                     >
                         Nama Kategori
                     </label>
-                    <Input
-                        id="name"
-                        placeholder="Contoh: Elektronik, Pakaian"
-                        disabled={isCreating}
-                        className="h-11 rounded-xl border-slate-200 focus-visible:ring-slate-400 bg-slate-50/30"
-                        {...register("name")}
-                    />
+                    <div className="relative flex items-center">
+                        <Input
+                            id="name"
+                            placeholder="Contoh: Elektronik, Pakaian"
+                            disabled={isCreating}
+                            className="focus-visible:ring-teal-500"
+                            {...register("name")}
+                        />
+                        <div className="absolute right-2">
+                            <VoiceMicButton
+                                fieldName="name"
+                                fieldType="text"
+                                setValue={setValue}
+                                storeSlug={storeSlug}
+                            ></VoiceMicButton>
+                        </div>
+                    </div>
                     {errors.name && (
                         <p className="text-xs font-medium text-red-500 mt-1">
                             {errors.name.message}
@@ -177,14 +189,24 @@ export function CategoryForm({
                             (Opsional)
                         </span>
                     </label>
-                    <textarea
-                        id="description"
-                        placeholder="Masukkan penjelasan singkat mengenai kategori ini..."
-                        disabled={isCreating}
-                        rows={4}
-                        className="flex w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3 py-2 text-sm ring-offset-white placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-50 resize-none transition-all"
-                        {...register("description")}
-                    />
+                    <div className="relative flex items-center">
+                        <textarea
+                            id="description"
+                            placeholder="Masukkan penjelasan singkat mengenai kategori ini..."
+                            disabled={isCreating}
+                            rows={4}
+                            className="flex w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3 py-2 text-sm ring-offset-white placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-50 resize-none transition-all"
+                            {...register("description")}
+                        />
+                        <div className="absolute right-2 top-2">
+                            <VoiceMicButton
+                                fieldName="description"
+                                fieldType="text"
+                                setValue={setValue}
+                                storeSlug={storeSlug}
+                            ></VoiceMicButton>
+                        </div>
+                    </div>
                     {errors.description && (
                         <p className="text-xs font-medium text-red-500 mt-1">
                             {errors.description.message}

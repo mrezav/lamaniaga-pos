@@ -28,6 +28,10 @@ export const profiles = pgTable(
             withTimezone: true,
             mode: "string",
         }).defaultNow(),
+        deletedAt: timestamp("deleted_at", {
+            withTimezone: true,
+            mode: "string",
+        }).defaultNow(),
     },
     (table) => [
         foreignKey({
@@ -40,11 +44,18 @@ export const profiles = pgTable(
             foreignColumns: [stores.id],
             name: "profiles_last_active_store_id_fkey",
         }).onDelete("set null"),
-        pgPolicy("Users can view own profile", {
+        pgPolicy("Profiles are viewable by everyone", {
             as: "permissive",
             for: "select",
             to: ["public"],
+            using: sql`true`, // Aman untuk SELECT jika tidak ada data rahasia di tabel profiles
+        }),
+        pgPolicy("Users can manage own profile", {
+            as: "permissive",
+            for: "all", // Mengcover SELECT, INSERT, UPDATE, DELETE sekaligus
+            to: ["authenticated"],
             using: sql`(auth.uid() = id)`,
+            withCheck: sql`(auth.uid() = id)`,
         }),
     ],
 );

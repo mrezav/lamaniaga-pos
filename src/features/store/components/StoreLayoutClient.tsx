@@ -29,6 +29,12 @@ import {
 } from "lucide-react";
 import { ProfileRow, StoreMemberRow, StoreRow } from "@/db/schema";
 import { Button } from "@/components/ui/button";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface StoreLayoutClientProps {
     children: React.ReactNode;
@@ -48,7 +54,7 @@ export function StoreLayoutClient({
     const supabase = createClient();
     const { showToast } = useToastStore();
 
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
 
@@ -118,6 +124,8 @@ export function StoreLayoutClient({
         products: "Produk",
         members: "Member Toko",
         transactions: "Transaksi",
+        create: "Buat Data",
+        edit: "Ubah Data",
     };
     const currentPage = pathname.split("/").pop() || "";
     const title = routeLabels[currentPage] || currentPage;
@@ -178,27 +186,43 @@ export function StoreLayoutClient({
                         </div>
                     )}
 
-                    {menuItems.map((item) => {
+                    {menuItems.map((item, i) => {
                         const isActive =
                             pathname === item.href ||
                             pathname.startsWith(`${item.href}/`);
                         return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={`flex items-center gap-3 px-3 py-3 rounded-xl font-semibold text-sm transition-all duration-200 group ${
-                                    isActive
-                                        ? "bg-blue-600 text-white shadow-lg shadow-blue-500/10"
-                                        : "hover:bg-slate-800/50 hover:text-white text-slate-400"
-                                }`}
-                            >
-                                <item.icon
-                                    className={`w-5 h-5 shrink-0 ${isActive ? "text-white" : "text-slate-400 group-hover:text-white"}`}
-                                />
-                                {!isSidebarCollapsed && (
-                                    <span>{item.name}</span>
-                                )}
-                            </Link>
+                            <TooltipProvider key={i} delayDuration={100}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Link
+                                            key={item.href}
+                                            href={item.href}
+                                            className={`flex items-center gap-3 px-3 py-3 rounded-xl font-semibold text-sm transition-all duration-200 group ${
+                                                isActive
+                                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/10"
+                                                    : "hover:bg-slate-800/50 hover:text-white text-slate-400"
+                                            }`}
+                                        >
+                                            <item.icon
+                                                className={`w-5 h-5 shrink-0 ${isActive ? "text-white" : "text-slate-400 group-hover:text-white"}`}
+                                            />
+                                            {!isSidebarCollapsed && (
+                                                <span>{item.name}</span>
+                                            )}
+                                        </Link>
+                                    </TooltipTrigger>
+
+                                    {/* Tooltip hanya aktif/muncul ketika sidebar mengecil */}
+                                    {isSidebarCollapsed && (
+                                        <TooltipContent
+                                            side="right"
+                                            className="bg-slate-900 text-white border-none ml-2"
+                                        >
+                                            <p>{item.name}</p>
+                                        </TooltipContent>
+                                    )}
+                                </Tooltip>
+                            </TooltipProvider>
                         );
                     })}
 

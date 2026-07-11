@@ -14,8 +14,9 @@ import {
 import { toast } from "sonner";
 import { useCategoryList } from "@/features/category/hooks/use-categories";
 import { useProductMutations } from "../hooks/use-product-mutations";
-import ProductVariantsForm from "./product-variant-form";
+import ProductVariantsForm from "./ProductVariantForm";
 import { Loader2 } from "lucide-react";
+import { VoiceMicButton } from "@/components/shared/VoiceMicButton";
 
 interface CreateProductFormProps {
     storeSlug: string;
@@ -156,10 +157,20 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
                     <label className="text-sm font-semibold text-slate-700">
                         Nama Produk
                     </label>
-                    <Input
-                        {...register("name")}
-                        className="focus-visible:ring-teal-500"
-                    />
+                    <div className="relative flex items-center">
+                        <Input
+                            {...register("name")}
+                            className="focus-visible:ring-teal-500"
+                        />
+                        <div className="absolute right-2">
+                            <VoiceMicButton
+                                fieldName="name"
+                                fieldType="text"
+                                setValue={setValue}
+                                storeSlug={storeSlug}
+                            />
+                        </div>
+                    </div>
                     {errors.name && (
                         <p className="text-xs text-red-500">
                             {errors.name.message}
@@ -172,10 +183,21 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
                         <label className="text-sm font-semibold text-slate-700">
                             Merk
                         </label>
-                        <Input
-                            {...register("merk")}
-                            className="focus-visible:ring-teal-500"
-                        />
+                        <div className="relative flex items-center">
+                            <Input
+                                {...register("merk")}
+                                className="focus-visible:ring-teal-500 pr-10" // Tambah pr-10
+                                placeholder="Contoh: Tanpa Merk / Lokal"
+                            />
+                            <div className="absolute right-2">
+                                <VoiceMicButton
+                                    fieldName="merk"
+                                    fieldType="text"
+                                    setValue={setValue}
+                                    storeSlug={storeSlug}
+                                />
+                            </div>
+                        </div>
                         {errors.merk && (
                             <p className="text-xs text-red-500">
                                 {errors.merk.message}
@@ -215,11 +237,23 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
                     <label className="text-sm font-semibold text-slate-700">
                         Deskripsi
                     </label>
-                    <Textarea
-                        {...register("description")}
-                        rows={4}
-                        className="focus-visible:ring-teal-500"
-                    />
+                    <div className="relative">
+                        <Textarea
+                            {...register("description")}
+                            rows={4}
+                            className="focus-visible:ring-teal-500 pr-10" // Tambah pr-10
+                        />
+                        <div className="absolute right-2 top-2">
+                            {" "}
+                            {/* Taruh agak ke atas untuk Textarea */}
+                            <VoiceMicButton
+                                fieldName="description"
+                                fieldType="text"
+                                setValue={setValue}
+                                storeSlug={storeSlug}
+                            />
+                        </div>
+                    </div>
                     {errors.description && (
                         <p className="text-xs text-red-500">
                             {errors.description.message}
@@ -303,14 +337,24 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
                             <label className="text-xs font-muted text-slate-600">
                                 Harga
                             </label>
-                            <Input
-                                type="number"
-                                step="0.01"
-                                {...register("variants.0.price", {
-                                    valueAsNumber: true,
-                                })}
-                                className="focus-visible:ring-teal-500"
-                            />
+                            <div className="relative flex items-center">
+                                <Input
+                                    type="number"
+                                    step="0.01"
+                                    {...register("variants.0.price", {
+                                        valueAsNumber: true,
+                                    })}
+                                    className="focus-visible:ring-teal-500 pr-10" // Tambah pr-10
+                                />
+                                <div className="absolute right-2">
+                                    <VoiceMicButton
+                                        fieldName="variants.0.price"
+                                        fieldType="number"
+                                        setValue={setValue}
+                                        storeSlug={storeSlug}
+                                    />
+                                </div>
+                            </div>
                             {errors.variants?.[0]?.price && (
                                 <p className="text-xs text-red-500">
                                     {errors.variants?.[0]?.price?.message}
@@ -321,13 +365,23 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
                             <label className="text-xs font-muted text-slate-600">
                                 Stok
                             </label>
-                            <Input
-                                type="number"
-                                {...register("variants.0.stock", {
-                                    valueAsNumber: true,
-                                })}
-                                className="focus-visible:ring-teal-500"
-                            />
+                            <div className="relative flex items-center">
+                                <Input
+                                    type="number"
+                                    {...register("variants.0.stock", {
+                                        valueAsNumber: true,
+                                    })}
+                                    className="focus-visible:ring-teal-500 pr-10" // Tambah pr-10
+                                />
+                                <div className="absolute right-2">
+                                    <VoiceMicButton
+                                        fieldName="variants.0.stock"
+                                        fieldType="number"
+                                        setValue={setValue}
+                                        storeSlug={storeSlug}
+                                    />
+                                </div>
+                            </div>
                             {errors.variants?.[0]?.stock && (
                                 <p className="text-xs text-red-500">
                                     {errors.variants?.[0]?.stock?.message}
@@ -338,10 +392,20 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
                             <label className="text-xs font-muted text-slate-600">
                                 Unit
                             </label>
-                            <Input
-                                {...register("variants.0.unit")}
-                                className="focus-visible:ring-teal-500"
-                            />
+                            <div className="relative flex items-center">
+                                <Input
+                                    {...register("variants.0.unit")}
+                                    className="focus-visible:ring-teal-500"
+                                />
+                                <div className="absolute right-2">
+                                    <VoiceMicButton
+                                        fieldName="variants.0.unit"
+                                        fieldType="text"
+                                        setValue={setValue}
+                                        storeSlug={storeSlug}
+                                    />
+                                </div>
+                            </div>
                             {errors.variants?.[0]?.stock && (
                                 <p className="text-xs text-red-500">
                                     {errors.variants?.[0]?.unit?.message}
@@ -352,11 +416,21 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
                             <label className="text-xs font-muted text-slate-600">
                                 Ukuran (Opsional)
                             </label>
-                            <Input
-                                {...register("variants.0.size")}
-                                placeholder="L/XL"
-                                className="focus-visible:ring-teal-500"
-                            />
+                            <div className="relative flex items-center">
+                                <Input
+                                    {...register("variants.0.size")}
+                                    placeholder="L/XL"
+                                    className="focus-visible:ring-teal-500"
+                                />
+                                <div className="absolute right-2">
+                                    <VoiceMicButton
+                                        fieldName="variants.0.size"
+                                        fieldType="text"
+                                        setValue={setValue}
+                                        storeSlug={storeSlug}
+                                    />
+                                </div>
+                            </div>
                             {errors.variants?.[0]?.size && (
                                 <p className="text-xs text-red-500">
                                     {errors.variants?.[0]?.size?.message}
@@ -367,11 +441,21 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
                             <label className="text-xs font-muted text-slate-600">
                                 Warna (Opsional)
                             </label>
-                            <Input
-                                {...register("variants.0.color")}
-                                placeholder="Hitam"
-                                className="focus-visible:ring-teal-500"
-                            />
+                            <div className="relative flex items-center">
+                                <Input
+                                    {...register("variants.0.color")}
+                                    placeholder="Hitam"
+                                    className="focus-visible:ring-teal-500"
+                                />
+                                <div className="absolute right-2">
+                                    <VoiceMicButton
+                                        fieldName="variants.0.color"
+                                        fieldType="text"
+                                        setValue={setValue}
+                                        storeSlug={storeSlug}
+                                    />
+                                </div>
+                            </div>
                             {errors.variants?.[0]?.color && (
                                 <p className="text-xs text-red-500">
                                     {errors.variants?.[0]?.color?.message}
@@ -385,6 +469,8 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
             {/* FORM MULTIPLE VARIANTS (Kondisi hasVariants = TRUE) */}
             {hasVariants && (
                 <ProductVariantsForm
+                    setValue={setValue}
+                    storeSlug={storeSlug}
                     control={control}
                     register={register}
                     errors={errors}

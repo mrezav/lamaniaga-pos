@@ -11,9 +11,11 @@ export const productVariantSchema = z.object({
     // Saat Edit: nilainya berisi UUID lama dari DB, dan Zod akan meloloskannya
     id: z.string().uuid().optional().nullable(),
     sku: z.string().optional().nullable(),
-    price: z.coerce.number().min(0, "Harga tidak boleh negatif"),
+    price: z.coerce
+        .number("Masukkan harga")
+        .min(0, "Harga tidak boleh negatif"),
     stock: z.coerce
-        .number()
+        .number("Masukkan stok")
         .int("Stok harus berupa bilangan bulat") // .int() ditaruh di awal setelah number
         .min(0, "Stok tidak boleh negatif"), // Menggunakan .min(0) agar angka 0 (stok habis) bisa di-save
     unit: z.string().min(1, "Unit wajib diisi").default("pcs"),

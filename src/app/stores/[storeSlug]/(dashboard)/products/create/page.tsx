@@ -1,4 +1,4 @@
-import { CreateProductForm } from "@/features/product/components/create-product-form";
+import { CreateProductForm } from "@/features/product/components/CreateProductForm";
 import { getStoreBySlug } from "@/lib/store";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
