@@ -1,4 +1,4 @@
-import { CategoryForm } from "@/features/category/components/category-form";
+import { CategoryForm } from "@/features/category/components/CategoryForm";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 

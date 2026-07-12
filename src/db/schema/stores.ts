@@ -33,7 +33,10 @@ export const stores = pgTable(
         })
             .defaultNow()
             .$onUpdate(() => sql`now()`),
-        deletedAt: timestamp("deleted_at"),
+        deletedAt: timestamp("deleted_at", {
+            withTimezone: true,
+            mode: "string",
+        }).defaultNow(),
         modifiedBy: uuid("modified_by").references(() => users.id, {
             onDelete: "set null",
         }),
@@ -58,7 +61,7 @@ export const stores = pgTable(
             )`,
         }),
         index("stores_name_idx").on(table.name),
-        uniqueIndex("stores_slug_uniq_idx").on(table.slug),
+        uniqueIndex("stores_slug_uniqe_idx").on(table.slug),
     ],
 );
 

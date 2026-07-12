@@ -45,9 +45,9 @@ export async function createProductAction(
             imageFile: formData.get("imageFile") as File | null,
         };
 
-        console.log("================== DATA MASUK DARI UI ==================");
-        console.log(rawData);
-        console.log("========================================================");
+        // console.log("================== DATA MASUK DARI UI ==================");
+        // console.log(rawData);
+        // console.log("========================================================");
 
         // --- STEP 2: VALIDASI MENGGUNAKAN ZOD ---
         const validation = productSchema.safeParse(rawData);

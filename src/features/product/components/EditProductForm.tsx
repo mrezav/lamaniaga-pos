@@ -12,11 +12,12 @@ import { Input } from "@/components/ui/input";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useCategoryList } from "@/features/category/hooks/use-categories";
-import ProductVariantForm from "./product-variant-form";
+import ProductVariantForm from "./ProductVariantForm";
 import { useProductMutations } from "../hooks/use-product-mutations";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { VoiceMicButton } from "@/components/shared/VoiceMicButton";
 
 interface props {
     storeSlug: string;
@@ -140,10 +141,20 @@ export function EditProductForm({ storeSlug, productId, initialData }: props) {
                     <label className="text-sm font-semibold text-slate-700">
                         Nama Produk
                     </label>
-                    <Input
-                        {...register("name")}
-                        className="focus-visible:ring-teal-500"
-                    />
+                    <div className="relative flex items-center">
+                        <Input
+                            {...register("name")}
+                            className="focus-visible:ring-teal-500"
+                        />
+                        <div className="absolute right-2">
+                            <VoiceMicButton
+                                fieldName="name"
+                                fieldType="text"
+                                setValue={setValue}
+                                storeSlug={storeSlug}
+                            />
+                        </div>
+                    </div>
                     {errors.name && (
                         <p className="text-xs text-red-500">
                             {errors.name.message}
@@ -156,10 +167,20 @@ export function EditProductForm({ storeSlug, productId, initialData }: props) {
                         <label className="text-sm font-semibold text-slate-700">
                             Merk
                         </label>
-                        <Input
-                            {...register("merk")}
-                            className="focus-visible:ring-teal-500"
-                        />
+                        <div className="relative flex items-center">
+                            <Input
+                                {...register("merk")}
+                                className="focus-visible:ring-teal-500"
+                            />
+                            <div className="absolute right-2">
+                                <VoiceMicButton
+                                    fieldName="merk"
+                                    fieldType="text"
+                                    setValue={setValue}
+                                    storeSlug={storeSlug}
+                                />
+                            </div>
+                        </div>
                         {errors.merk && (
                             <p className="text-xs text-red-500">
                                 {errors.merk.message}
@@ -200,11 +221,21 @@ export function EditProductForm({ storeSlug, productId, initialData }: props) {
                     <label className="text-sm font-semibold text-slate-700">
                         Deskripsi
                     </label>
-                    <Textarea
-                        {...register("description")}
-                        rows={4}
-                        className="focus-visible:ring-teal-500"
-                    />
+                    <div className="relative flex items-center">
+                        <Textarea
+                            {...register("description")}
+                            rows={4}
+                            className="focus-visible:ring-teal-500"
+                        />
+                        <div className="absolute right-2">
+                            <VoiceMicButton
+                                fieldName="description"
+                                fieldType="text"
+                                setValue={setValue}
+                                storeSlug={storeSlug}
+                            />
+                        </div>
+                    </div>
                     {errors.description && (
                         <p className="text-xs text-red-500">
                             {errors.description.message}
@@ -241,6 +272,8 @@ export function EditProductForm({ storeSlug, productId, initialData }: props) {
                 </div>
 
                 <ProductVariantForm
+                    setValue={setValue}
+                    storeSlug={storeSlug}
                     control={control}
                     errors={errors}
                     register={register}
@@ -265,14 +298,14 @@ export function EditProductForm({ storeSlug, productId, initialData }: props) {
             </Button>
 
             {/* LIVE PREVIEW BOX */}
-            <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl mt-10">
+            {/* <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl mt-10">
                 <p className="text-xs font-bold text-teal-400 uppercase tracking-wider mb-2">
                     ⚡ Live Preview State Array:
                 </p>
                 <pre className="text-xs font-mono text-slate-300 bg-slate-950/60 p-4 rounded-xl overflow-x-auto max-h-64 border border-slate-800/50">
                     {JSON.stringify(initialData, null, 2)}
                 </pre>
-            </div>
+            </div> */}
         </form>
     );
 }

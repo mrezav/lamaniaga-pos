@@ -13,8 +13,6 @@ import { stores } from "./stores";
 import { users } from "./users";
 import { products } from "./products";
 
-export const DEFAULT_CATEGORY_ID = "00000000-0000-0000-0000-000000000000";
-
 export const categories = pgTable(
     "categories",
     {

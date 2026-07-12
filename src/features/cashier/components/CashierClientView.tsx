@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useCartStore } from "@/features/cashier/store/useCartStore";
 import { ProductCard } from "@/features/cashier/components/ProductCard";
 import { CartItemRow } from "@/features/cashier/components/CartItemRow";
@@ -16,8 +16,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import { Loader2, Search, SearchAlert, ShoppingCart } from "lucide-react";
-import { useProducts } from "@/features/product/hooks/use-products";
+import { ArrowUp, Loader2, Search, ShoppingCart } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useCategoryList } from "@/features/category/hooks/use-categories";
 import { useProfile } from "@/features/user/hooks/use-profile";
@@ -25,14 +24,15 @@ import CashierHeader from "./CashierHeader";
 import { ProfileRow } from "@/db/schema";
 import LoadingSection from "@/components/shared/LoadingSection";
 import EmptySection from "@/components/shared/EmptySection";
+import { useInView } from "@/hooks/use-in-view"; // Import hook useInView milikmu
+import { useInfiniteProducts } from "@/features/product/hooks/use-infinite-products";
 
 interface Props {
     storeSlug: string;
 }
+
 export default function CashierClientView({ storeSlug }: Props) {
     const [search, setSearch] = useState("");
-    const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(20);
     const [sort, setSort] = useState("createdAt-desc");
     const debouncedSearch = useDebounce(search, 400);
     const [sortBy, sortOrder] = sort.split("-") as [
@@ -54,72 +54,101 @@ export default function CashierClientView({ storeSlug }: Props) {
         phoneNumber: null,
         createdAt: null,
         updatedAt: null,
+        deletedAt: null,
         lastActiveStoreId: null,
     };
     const profile = profileResponse?.data ?? defaultProfile;
 
     const { data: categoryList } = useCategoryList(storeSlug);
-    // Menyisipkan opsi "Semua" di awal array secara dinamis
-    const categories = [
-        { id: "all", name: "Semua" }, // Object mock untuk me-reset filter
-        ...(categoryList ?? []),
-    ];
+    const categories = [{ id: "all", name: "Semua" }, ...(categoryList ?? [])];
 
-    const { data, isLoading } = useProducts({
-        storeSlug,
-        categoryId,
-        search: debouncedSearch,
-        page,
-        limit: limit,
-        sortBy,
-        sortOrder,
+    // 1. Panggil useProducts versi Infinite Query
+    const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+        useInfiniteProducts({
+            storeSlug,
+            categoryId,
+            search: debouncedSearch,
+            limit: 8,
+            sortBy,
+            sortOrder,
+        });
+
+    // Menggabungkan semua array items dari setiap page menjadi satu array tunggal
+    const products = data?.pages.flatMap((page) => page?.items ?? []) ?? [];
+
+    // 2. Pasang Intersection Observer lewat useInView
+    const { sentinelRef, inView } = useInView({
+        rootMargin: "100px",
     });
-    const items = data?.items ?? [];
+
+    // 3. Effect untuk Infinite Scroll
+    useEffect(() => {
+        if (inView && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+        }
+    }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+    // Ref biasa untuk menyimpan node elemen agar bisa dipanggil fungsi scrollToTop
+    const scrollContainerNode = useRef<HTMLDivElement | null>(null);
+    const [showBackToTop, setShowBackToTop] = useState(false);
+
+    // 1. Callback Ref untuk otomatis memasang listener saat elemen scroll terpasang ke DOM
+    const scrollContainerRef = useCallback((node: HTMLDivElement | null) => {
+        if (node !== null) {
+            scrollContainerNode.current = node;
+
+            const handleScroll = () => {
+                // console.log("Current Scroll Top:", node.scrollTop);
+
+                if (node.scrollTop > 500) {
+                    setShowBackToTop(true);
+                } else {
+                    setShowBackToTop(false);
+                }
+            };
+
+            // Pasang listener langsung begitu elemen di-render ke DOM
+            node.addEventListener("scroll", handleScroll);
+
+            // (Opsional) Langsung jalankan sekali untuk cek posisi awal
+            handleScroll();
+        }
+    }, []);
+
+    // 2. Fungsi Smooth Scroll ke Atas
+    const scrollToTop = () => {
+        scrollContainerNode.current?.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
+    };
 
     return (
-        <div className="flex h-screen w-screen flex-col bg-background text-foreground overflow-hidden">
-            {/* NAVBAR */}
-            {/* <header className="flex h-14 items-center justify-between border-b bg-card px-4 shrink-0">
-                <span className="font-black text-xl tracking-tight text-primary">
-                    Lamaniaga<span className="text-emerald-500">.pos</span>
-                </span>
-                <Badge
-                    variant="outline"
-                    className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 gap-1"
-                >
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>{" "}
-                    Online
-                </Badge>
-            </header> */}
-            <CashierHeader profile={profile}></CashierHeader>
-            {/* BODY GRID */}
+        <div className="flex h-dvh w-screen flex-col bg-background text-foreground overflow-hidden">
+            <CashierHeader profile={profile} />
+
             <div className="grid flex-1 grid-cols-12 overflow-hidden p-3 lg:p-4 gap-4">
                 {/* KATALOG PRODUK */}
-                <div className="col-span-12 lg:col-span-7 flex flex-col bg-card rounded-xl border shadow-sm p-4 overflow-hidden">
+                <div className="relative col-span-12 lg:col-span-7 flex flex-col bg-card rounded-xl border shadow-sm p-4 overflow-hidden h-full">
+                    {/* SEARCH BAR */}
                     <div className="relative mb-3 shrink-0">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                             type="text"
                             placeholder="Cari atau scan... (F1)"
                             className="pl-9 py-5 bg-muted/50"
-                            onChange={(e) => {
-                                setSearch(e.target.value);
-                                setPage(1);
-                            }}
+                            onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
 
+                    {/* KATEGORI */}
                     <div className="flex gap-2 overflow-x-auto pb-3 shrink-0 scrollbar-none">
                         {categories.map((cat) => {
-                            // Menyisipkan opsi "Semua" di awal array secara dinamis
                             const isActive = cat.id === categoryId;
                             return (
                                 <Button
                                     key={cat.id}
-                                    onClick={() => {
-                                        setCategoryId(cat.id);
-                                        setPage(1);
-                                    }}
+                                    onClick={() => setCategoryId(cat.id)}
                                     variant={isActive ? "default" : "outline"}
                                     className="rounded-full shrink-0 text-xs px-4"
                                 >
@@ -129,21 +158,55 @@ export default function CashierClientView({ storeSlug }: Props) {
                         })}
                     </div>
 
+                    {/* KONTEN UTAMA PRODUK */}
                     {isLoading ? (
-                        <div className="grid m-auto justify-items-center items-center text-center">
-                            <LoadingSection></LoadingSection>
+                        <div className="flex-1 flex justify-center items-center">
+                            <LoadingSection />
                         </div>
-                    ) : items.length < 1 ? (
-                            <EmptySection></EmptySection>
+                    ) : products.length < 1 ? (
+                        <div className="flex-1 flex justify-center items-center">
+                            <EmptySection />
+                        </div>
                     ) : (
-                        <div className="overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 items-start">
-                            {items.map((product) => (
-                                <ProductCard
-                                    key={product.id}
-                                    product={product}
-                                ></ProductCard>
-                            ))}
+                        /* KONTENER SCROLL PRODUK (Ditambahkan Ref) */
+                        <div
+                            ref={scrollContainerRef}
+                            className="relative flex-1 overflow-y-auto pr-1"
+                        >
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 items-start">
+                                {products.map((product) => (
+                                    <ProductCard
+                                        key={product.id}
+                                        product={product}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* ELEMEN SENTINEL */}
+                            <div
+                                ref={sentinelRef}
+                                className="h-12 w-full flex items-center justify-center my-2"
+                            >
+                                {isFetchingNextPage && (
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+                                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                        <span>Memuat produk lainnya...</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
+                    )}
+
+                    {/* TOMBOL BACK TO TOP (FLOATING) */}
+                    {showBackToTop && (
+                        <Button
+                            onClick={scrollToTop}
+                            size="icon"
+                            className="absolute bottom-6 right-6 rounded-full shadow-lg z-20 animate-in fade-in zoom-in duration-200"
+                            title="Kembali ke atas"
+                        >
+                            <ArrowUp className="h-5 w-5" />
+                        </Button>
                     )}
                 </div>
 
