@@ -18,7 +18,7 @@ export const useProductMutations = (storeSlug: string) => {
             return response;
         },
         onSuccess: () => {
-            toast.success("Produk berhasil dibuat.");
+            toast.success("Produk berhasil dibuat");
             queryClient.invalidateQueries({
                 queryKey: ["products", storeSlug],
             });
