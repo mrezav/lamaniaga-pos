@@ -136,8 +136,6 @@ export function CreateProductForm({ storeSlug }: CreateProductFormProps) {
                 });
                 return;
             }
-
-            toast.success("Produk berhasil dibuat!");
             router.push(`/stores/${storeSlug}/products`);
         } catch (error) {
             console.error(error);
