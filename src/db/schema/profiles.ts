@@ -31,7 +31,7 @@ export const profiles = pgTable(
         deletedAt: timestamp("deleted_at", {
             withTimezone: true,
             mode: "string",
-        }).defaultNow(),
+        }),
     },
     (table) => [
         foreignKey({

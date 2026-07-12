@@ -9,11 +9,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ProductListItem, ProductVariantItem } from "@/features/product/types";
+import { ProductCardItem, ProductVariantItem } from "@/features/product/types";
 import { formatIDR } from "@/utils";
 
 interface ProductCardProps {
-    product: ProductListItem;
+    product: ProductCardItem;
 }
 
 export function ProductCard({ product }: ProductCardProps) {

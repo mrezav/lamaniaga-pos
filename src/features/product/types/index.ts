@@ -1,5 +1,6 @@
 export interface FindProductsParams {
     storeId: string;
+    storeSlug?: string;
     search?: string;
     categoryId?: string;
     page?: number;
@@ -14,7 +15,7 @@ export interface ProductVariantItem {
     price: string; // Drizzle mengembalikan numeric/decimal postgres sebagai string
     stock: number;
     unit: string;
-    attributes: Record<string, any> | null;
+    attributes: Record<string, string | number | boolean>;
 }
 
 export interface ProductListItem {
@@ -39,5 +40,27 @@ export interface FindProductsResponse {
         limit: number;
         totalItems: number;
         totalPages: number;
+    };
+}
+
+// Data ringkas yang dikembalikan khusus untuk Product Card
+export interface ProductCardItem {
+    id: string;
+    name: string;
+    merk: string|null;
+    slug: string;
+    imageUrl: string | null;
+    categoryId: string | null;
+    categoryName: string | null;
+    variants: ProductVariantItem[];
+}
+
+export interface InfiniteProductsResponse {
+    items: ProductCardItem[];
+    pagination: {
+        currentPage: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        totalData: number;
     };
 }
