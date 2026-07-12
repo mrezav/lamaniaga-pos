@@ -8,6 +8,7 @@ import { getStoreBySlug } from "@/lib/store";
 import { UserAction } from "@/types";
 import { findProductById } from "../repositories";
 import { deleteFileBulk, uploadFile } from "@/lib/storage";
+import { revalidatePath } from "next/cache";
 
 export async function updateproductAction(
     formData: FormData,
@@ -67,6 +68,9 @@ export async function updateproductAction(
             // Jika proses update data gagal dan gambar baru sudah di upload maka hapus lagi
             if (newImageUrl) await deleteFileBulk([newImageUrl]);
         }
+
+        revalidatePath(`/stores/${storeSlug}/products`);
+        revalidatePath(`/stores/${storeSlug}/products/${product.id}`);
 
         return { success: true };
     } catch (error: unknown) {
