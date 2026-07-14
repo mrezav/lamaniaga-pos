@@ -173,7 +173,7 @@ export default function CashierClientView({ storeSlug }: Props) {
                             ref={scrollContainerRef}
                             className="relative flex-1 overflow-y-auto pr-1"
                         >
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 items-start">
+                            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 items-start">
                                 {products.map((product) => (
                                     <ProductCard
                                         key={product.id}

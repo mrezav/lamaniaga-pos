@@ -158,10 +158,10 @@ export function ProductCard({
 
                 {/* Baris Bawah: Harga */}
                 <div className="pt-2 border-t border-border/50 flex items-center justify-between">
-                    <span className="text-[15px] text-muted-foreground tracking-wider font-medium">
+                    <span className="text-xs md:text-sm text-muted-foreground tracking-wider">
                         Harga
                     </span>
-                    <div className="font-bold text-emerald-600 text-sm">
+                    <div className="font-bold text-emerald-600 text-xs md:text-sm">
                         {item.variants.length == 1 ? (
                             <div>{formatIDR(minPrice)}</div>
                         ) : (

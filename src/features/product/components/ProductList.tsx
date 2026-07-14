@@ -124,7 +124,7 @@ export function ProductList({ storeSlug }: ProductTableProps) {
                                         setSearch(e.target.value);
                                         setPage(1);
                                     }}
-                                    placeholder="Cari produk, merk atau kategori..."
+                                    placeholder="Cari nama atau merk produk..."
                                     className="h-8 px-2 text-sm pl-10 rounded-xl border-slate-200 focus-visible:ring-slate-400 bg-slate-50/30 w-full"
                                 />
                             </div>
@@ -186,6 +186,46 @@ export function ProductList({ storeSlug }: ProductTableProps) {
                                                         <SelectItem value="name-desc">
                                                             Nama Z-A
                                                         </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col gap-4">
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-slate-500">
+                                                    Pilih Kategori
+                                                </label>
+                                                <Select
+                                                    value={categoryId}
+                                                    onValueChange={(value) => {
+                                                        setCategoryId(value);
+                                                        setPage(1);
+                                                    }}
+                                                >
+                                                    <SelectTrigger className="w-full  h-11 rounded-xl border-slate-200 focus-visible:ring-slate-400 bg-slate-50/30">
+                                                        <div className="flex items-center gap-2">
+                                                            <Palette className="h-4 w-4 text-slate-400 shrink-0" />
+                                                            <SelectValue placeholder="Status" />
+                                                        </div>
+                                                    </SelectTrigger>
+                                                    <SelectContent className="rounded-xl">
+                                                        {categories.map(
+                                                            (option) => (
+                                                                <SelectItem
+                                                                    key={
+                                                                        option.id
+                                                                    }
+                                                                    value={
+                                                                        option.id
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        option.name
+                                                                    }
+                                                                </SelectItem>
+                                                            ),
+                                                        )}
                                                     </SelectContent>
                                                 </Select>
                                             </div>
