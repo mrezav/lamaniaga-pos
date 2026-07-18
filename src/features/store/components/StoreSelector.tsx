@@ -8,19 +8,6 @@ import { Store, ArrowRight, Loader2 } from "lucide-react";
 import { StoreRow } from "@/db/schema";
 import { useStores } from "../hooks/use-stores";
 
-// interface StoreData {
-//     id: string;
-//     name: string;
-//     slug: string;
-//     logoUrl?: string | null;
-//     ownerId: string;
-// }
-
-// interface StoreSelectorProps {
-//     stores: StoreRow;
-//     userId: string;
-// }
-
 export function StoreSelector() {
     const router = useRouter();
     const { showToast } = useToastStore();

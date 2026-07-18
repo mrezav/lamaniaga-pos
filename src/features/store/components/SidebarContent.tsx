@@ -1,4 +1,3 @@
-import React from "react";
 import Link from "next/link"; // atau 'react-router-dom' tergantung framework Anda
 import {
     Store,
@@ -7,6 +6,7 @@ import {
     QrCode,
     Check,
     Copy,
+    LucideProps,
 } from "lucide-react";
 import {
     Tooltip,
@@ -15,13 +15,22 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { StoreMemberRow, StoreRow } from "@/db/schema";
+import { ForwardRefExoticComponent, RefAttributes } from "react";
+
+interface MenuItems {
+    name: string;
+    href: string;
+    icon: ForwardRefExoticComponent<
+        Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
+    >;
+}
 
 interface SidebarProps {
     isSidebarCollapsed: boolean;
     setIsSidebarCollapsed: (collapsed: boolean) => void;
     store: StoreRow;
     storeMember: StoreMemberRow;
-    menuItems: any[];
+    menuItems: MenuItems[];
     pathname: string;
     copyStoreCode: () => void;
     isCopied: boolean;
