@@ -14,7 +14,7 @@ export default function PaginationSection({
     return (
         <div className="flex items-center justify-between p-4 border-t bg-muted/20">
             <span className="text-xs text-muted-foreground">
-                Total: {pagination.totalItems} Baris
+                Total: {pagination.totalItems}
             </span>
             <div className="flex items-center space-x-2">
                 <Button
@@ -23,10 +23,10 @@ export default function PaginationSection({
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={pagination.page <= 1 || isLoading}
                 >
-                    Sebelumnya
+                    Prev
                 </Button>
                 <span className="text-xs font-medium">
-                    Halaman {pagination.page} / {pagination.totalPages}
+                    Page {pagination.page} / {pagination.totalPages}
                 </span>
                 <Button
                     variant="outline"
@@ -38,7 +38,7 @@ export default function PaginationSection({
                         pagination.page >= pagination.totalPages || isLoading
                     }
                 >
-                    Berikutnya
+                    Next
                 </Button>
             </div>
         </div>

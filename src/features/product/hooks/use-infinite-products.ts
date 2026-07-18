@@ -42,6 +42,7 @@ export function useInfiniteProducts(params: Omit<FindProductsParams, "page">) {
             const response = await getInfiniteProductsAction({
                 storeId: "",
                 storeSlug,
+                search,
                 categoryId,
                 page: pageParam as number,
                 limit,

@@ -26,6 +26,7 @@ import LoadingSection from "@/components/shared/LoadingSection";
 import EmptySection from "@/components/shared/EmptySection";
 import { useInView } from "@/hooks/use-in-view"; // Import hook useInView milikmu
 import { useInfiniteProducts } from "@/features/product/hooks/use-infinite-products";
+import ScrollContainer from "react-indiana-drag-scroll";
 
 interface Props {
     storeSlug: string;
@@ -142,7 +143,7 @@ export default function CashierClientView({ storeSlug }: Props) {
                     </div>
 
                     {/* KATEGORI */}
-                    <div className="flex gap-2 overflow-x-auto pb-3 shrink-0 scrollbar-none">
+                    <ScrollContainer className="flex gap-2 overflow-x-auto pb-3 shrink-0 scrollbar-none">
                         {categories.map((cat) => {
                             const isActive = cat.id === categoryId;
                             return (
@@ -156,7 +157,7 @@ export default function CashierClientView({ storeSlug }: Props) {
                                 </Button>
                             );
                         })}
-                    </div>
+                    </ScrollContainer>
 
                     {/* KONTEN UTAMA PRODUK */}
                     {isLoading ? (
@@ -173,7 +174,7 @@ export default function CashierClientView({ storeSlug }: Props) {
                             ref={scrollContainerRef}
                             className="relative flex-1 overflow-y-auto pr-1"
                         >
-                            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 items-start">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 items-start">
                                 {products.map((product) => (
                                     <ProductCard
                                         key={product.id}

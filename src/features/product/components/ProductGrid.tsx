@@ -20,7 +20,7 @@ export default function ProductGrid({
         return <EmptySection></EmptySection>;
     }
     return (
-        <div className="grid grid-cols-2 gap-x-5 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:gap-x-6">
+        <div className="grid sm-grid-cols-2 gap-x-5 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:gap-x-6">
             {items.map((item) => (
                 <ProductCard
                     key={item.id}
