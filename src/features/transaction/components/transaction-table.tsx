@@ -166,7 +166,7 @@ export function TransactionTable({ transactions }: Props) {
                                         </Badge>
                                     )}
                                     {tx.paymentStatus ===
-                                        PaymentStatus.FAILED && (
+                                        PaymentStatus.CANCELLED && (
                                         <Badge
                                             variant="outline"
                                             className="bg-destructive/5 text-destructive border-destructive/20 gap-1.5 font-medium px-2.5 py-0.5 rounded-full text-[11px]"
