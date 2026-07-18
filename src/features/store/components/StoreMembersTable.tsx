@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Check, X, Users, Loader2, Award } from "lucide-react";
 import { getStoreMembersAction } from "../actions/get-member";

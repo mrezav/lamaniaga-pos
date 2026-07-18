@@ -8,34 +8,17 @@ import { useToastStore } from "@/state/useToastStore";
 import {
     LayoutDashboard,
     Boxes,
-    QrCode,
-    Bell,
-    ChevronLeft,
-    ChevronRight,
     LogOut,
-    Settings,
-    Store,
     User,
-    Copy,
-    Check,
     UsersRound,
     PackageIcon,
-    MonitorSmartphone,
-    SwitchCameraIcon,
     SwitchCamera,
-    Wallet,
     ShoppingCart,
     ReceiptIcon,
     Menu,
 } from "lucide-react";
 import { ProfileRow, StoreMemberRow, StoreRow } from "@/db/schema";
 import { Button } from "@/components/ui/button";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SidebarContent } from "./SidebarContent";
 
