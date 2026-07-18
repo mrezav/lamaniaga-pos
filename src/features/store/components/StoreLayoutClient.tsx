@@ -26,6 +26,7 @@ import {
     Wallet,
     ShoppingCart,
     ReceiptIcon,
+    Menu,
 } from "lucide-react";
 import { ProfileRow, StoreMemberRow, StoreRow } from "@/db/schema";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,8 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { SidebarContent } from "./SidebarContent";
 
 interface StoreLayoutClientProps {
     children: React.ReactNode;
@@ -57,20 +60,6 @@ export function StoreLayoutClient({
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
-
-    const handleLogout = async () => {
-        try {
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
-            showToast("Berhasil keluar dari akun.", "success");
-            router.push("/login");
-            router.refresh();
-        } catch (err: unknown) {
-            const message =
-                err instanceof Error ? err.message : "Gagal melakukan logout";
-            showToast(message, "error");
-        }
-    };
 
     const copyStoreCode = async () => {
         if (store.joinCode) {
@@ -130,207 +119,99 @@ export function StoreLayoutClient({
     const currentPage = pathname.split("/").pop() || "";
     const title = routeLabels[currentPage] || currentPage;
 
+    const handleLogout = async () => {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            showToast("Berhasil keluar dari akun.", "success");
+            router.push("/login");
+            router.refresh();
+        } catch (err: unknown) {
+            const message =
+                err instanceof Error ? err.message : "Gagal melakukan logout";
+            showToast(message, "error");
+        }
+    };
+
     return (
-        <div className="flex h-screen overflow-hidden bg-slate-50 font-sans w-full">
-            {/* 1. Sidebar Navigation */}
+        <div className="flex h-screen overflow-hidden bg-slate-50 font-sans w-full relative">
+            {/* 1. Desktop Sidebar Navigation */}
+            {/* Menambahkan utility 'hidden md:flex' agar hilang total di layar HP */}
             <aside
-                className={`fixed inset-y-0 left-0 z-20 flex flex-col h-full bg-[#0F172A] border-r border-[#1E293B] text-slate-300 transition-all duration-300 ${
+                className={`fixed inset-y-0 left-0 z-20 hidden md:flex flex-col h-full bg-[#0F172A] border-r border-[#1E293B] transition-all duration-300 ${
                     isSidebarCollapsed ? "w-20" : "w-64"
                 }`}
             >
-                {/* Sidebar Header: Logo & Store Name */}
-                <div className="flex items-center justify-between h-20 px-4 border-b border-[#1E293B] shrink-0">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-600 border border-blue-500 shrink-0 shadow-lg shadow-blue-500/10">
-                            {store.logoUrl ? (
-                                <img
-                                    src={store.logoUrl}
-                                    alt={store.name}
-                                    className="w-full h-full object-cover rounded-xl"
-                                />
-                            ) : (
-                                <Store className="w-5 h-5 text-white" />
-                            )}
-                        </div>
-                        {!isSidebarCollapsed && (
-                            <div className="flex flex-col truncate">
-                                <span className="font-extrabold text-white text-sm tracking-tight leading-tight">
-                                    {store.name}
-                                </span>
-                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-                                    {storeMember.role}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                    {!isSidebarCollapsed && (
-                        <button
-                            onClick={() => setIsSidebarCollapsed(true)}
-                            className="p-1.5 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                        </button>
-                    )}
-                </div>
-
-                {/* Sidebar Middle Content: Navigation Links */}
-                <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-                    {isSidebarCollapsed && (
-                        <div className="flex justify-center mb-6">
-                            <button
-                                onClick={() => setIsSidebarCollapsed(false)}
-                                className="p-2 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
-                        </div>
-                    )}
-
-                    {menuItems.map((item, i) => {
-                        const isActive =
-                            pathname === item.href ||
-                            pathname.startsWith(`${item.href}/`);
-                        return (
-                            <TooltipProvider key={i} delayDuration={100}>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Link
-                                            key={item.href}
-                                            href={item.href}
-                                            className={`flex items-center gap-3 px-3 py-3 rounded-xl font-semibold text-sm transition-all duration-200 group ${
-                                                isActive
-                                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/10"
-                                                    : "hover:bg-slate-800/50 hover:text-white text-slate-400"
-                                            }`}
-                                        >
-                                            <item.icon
-                                                className={`w-5 h-5 shrink-0 ${isActive ? "text-white" : "text-slate-400 group-hover:text-white"}`}
-                                            />
-                                            {!isSidebarCollapsed && (
-                                                <span>{item.name}</span>
-                                            )}
-                                        </Link>
-                                    </TooltipTrigger>
-
-                                    {/* Tooltip hanya aktif/muncul ketika sidebar mengecil */}
-                                    {isSidebarCollapsed && (
-                                        <TooltipContent
-                                            side="right"
-                                            className="bg-slate-900 text-white border-none ml-2"
-                                        >
-                                            <p>{item.name}</p>
-                                        </TooltipContent>
-                                    )}
-                                </Tooltip>
-                            </TooltipProvider>
-                        );
-                    })}
-
-                    {/* Store Code Copyable Field */}
-                    {store.joinCode && (
-                        <div
-                            onClick={copyStoreCode}
-                            className={`flex items-center gap-3 px-3 py-3 rounded-xl font-semibold text-sm cursor-pointer transition-all duration-200 group ${
-                                isSidebarCollapsed
-                                    ? "justify-center hover:bg-slate-800/50 text-slate-400 hover:text-white"
-                                    : "bg-slate-800/35 border border-[#1E293B] hover:bg-slate-800 text-slate-300 hover:text-white"
-                            }`}
-                        >
-                            <QrCode className="w-5 h-5 shrink-0 text-slate-400 group-hover:text-white" />
-                            {!isSidebarCollapsed && (
-                                <div className="flex items-center justify-between w-full">
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                            Kode Toko
-                                        </span>
-                                        <span className="text-xs font-mono font-bold mt-0.5">
-                                            {store.joinCode}
-                                        </span>
-                                    </div>
-                                    {isCopied ? (
-                                        <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                                    ) : (
-                                        <Copy className="w-4 h-4 text-slate-400 shrink-0 group-hover:text-white" />
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </nav>
-
-                {/* Sidebar Footer: Trademark */}
-                <div className="p-4 border-t border-[#1E293B] shrink-0 text-center flex flex-col items-center justify-center">
-                    {!isSidebarCollapsed ? (
-                        <div className="space-y-1">
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                                Trademark
-                            </p>
-                            <p className="text-xs text-slate-400 font-semibold font-mono">
-                                © 2026 Lamaniaga
-                            </p>
-                        </div>
-                    ) : (
-                        <span className="text-xs font-black font-mono text-slate-600">
-                            L&apos;26
-                        </span>
-                    )}
-                </div>
+                <SidebarContent
+                    isSidebarCollapsed={isSidebarCollapsed}
+                    setIsSidebarCollapsed={setIsSidebarCollapsed}
+                    store={store}
+                    storeMember={storeMember}
+                    menuItems={menuItems}
+                    pathname={pathname}
+                    copyStoreCode={copyStoreCode}
+                    isCopied={isCopied}
+                />
             </aside>
 
             {/* 2. Main Area: Topbar and Content Wrapper */}
+            {/* Mengubah padding kiri agar dinamis: 'pl-0' di mobile, dan menyesuaikan lebar sidebar di desktop ('md:pl-20' / 'md:pl-64') */}
             <div
-                className={`flex flex-col flex-1 h-full overflow-hidden transition-all duration-300 ${
-                    isSidebarCollapsed ? "pl-20" : "pl-64"
+                className={`flex flex-col flex-1 h-full overflow-hidden transition-all duration-300 pl-0 ${
+                    isSidebarCollapsed ? "md:pl-20" : "md:pl-64"
                 }`}
             >
                 {/* Topbar/Header */}
-                <header className="flex items-center justify-between h-20 px-8 bg-white border-b border-slate-200 shrink-0">
-                    <div>
-                        <h2 className="text-lg font-bold text-slate-800 capitalize tracking-tight">
-                            {title}
-                        </h2>
+                {/* Mengubah padding horisontal 'px-4 md:px-8' agar pas untuk layar kecil */}
+                <header className="flex items-center justify-between h-20 px-4 md:px-8 bg-white border-b border-slate-200 shrink-0">
+                    {/* Bagian Kiri Topbar: Tombol Hamburger Mobile + Judul Halaman */}
+                    <div className="flex items-center gap-4">
+                        {/* Hamburger Button menggunakan Shadcn UI Sheet */}
+                        {/* Otomatis hanya dirender/muncul di layar HP (< md) */}
+                        <div className="md:hidden">
+                            <Sheet>
+                                <SheetTrigger asChild>
+                                    <button className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors">
+                                        <Menu className="w-6 h-6" />
+                                    </button>
+                                </SheetTrigger>
+                                {/* SheetContent di-set p-0 dan bg-[#0F172A] agar matching dengan tema sidebar asli */}
+                                <SheetContent
+                                    side="left"
+                                    className="p-0 w-64 bg-[#0F172A] border-r border-[#1E293B]"
+                                >
+                                    {/* Di mobile view, paksa prop `isSidebarCollapsed` selalu bernilai false */}
+                                    <SidebarContent
+                                        isSidebarCollapsed={false}
+                                        setIsSidebarCollapsed={() => {}}
+                                        store={store}
+                                        storeMember={storeMember}
+                                        menuItems={menuItems}
+                                        pathname={pathname}
+                                        copyStoreCode={copyStoreCode}
+                                        isCopied={isCopied}
+                                    />
+                                </SheetContent>
+                            </Sheet>
+                        </div>
+
+                        <div>
+                            <h2 className="text-base md:text-lg font-bold text-slate-800 capitalize tracking-tight truncate max-w-[180px] sm:max-w-none">
+                                {title}
+                            </h2>
+                        </div>
                     </div>
 
+                    {/* Bagian Kanan Topbar: Profil Dropdown */}
                     <div className="flex items-center gap-6">
-                        {/* Store Switcher Option if user has multiple stores or just links to Selector */}
-                        <Button
-                            asChild
-                            size="sm"
-                            variant="ghost"
-                            className="text-xs font-bold text-slate-800 hover:bg-blue-600 hover:text-white"
-                        >
-                            <Link href="/stores">
-                                <SwitchCamera className="mr-2 h-4 w-4" />
-                                Ganti Toko
-                            </Link>
-                        </Button>
-
-                        {/* Notification Icon */}
-                        {/* <button className="relative p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-50 transition-colors group">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full group-hover:scale-110 transition-transform" />
-                        </button> */}
-                        <Button
-                            asChild
-                            size="sm"
-                            variant="ghost"
-                            className="font-bold text-slate-800 hover:bg-blue-600 hover:text-white"
-                        >
-                            <Link href={`/stores/${store.slug}/checkout`}>
-                                <ShoppingCart className="mr-2 h-4 w-4" />
-                                Kasir
-                            </Link>
-                        </Button>
-
-                        {/* Profile Dropdown Menu */}
                         <div className="relative">
                             <button
                                 onClick={() =>
                                     setIsUserMenuOpen(!isUserMenuOpen)
                                 }
-                                className="flex items-center gap-3 p-1.5 pr-3 rounded-2xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-200"
+                                className="flex items-center gap-2 md:gap-3 p-1.5 pr-2 md:pr-3 rounded-2xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-200"
                             >
-                                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-50 text-blue-600 font-black shrink-0 border border-blue-100">
+                                <div className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-xl bg-blue-50 text-blue-600 font-black shrink-0 border border-blue-100">
                                     {profile.avatarUrl ? (
                                         <img
                                             src={profile.avatarUrl}
@@ -341,7 +222,7 @@ export function StoreLayoutClient({
                                         <User className="w-4 h-4" />
                                     )}
                                 </div>
-                                <span className="hidden sm:inline font-bold text-sm text-slate-700 max-w-120px truncate">
+                                <span className="hidden sm:inline font-bold text-sm text-slate-700 max-w-[120px] truncate">
                                     {profile.fullName}
                                 </span>
                             </button>
@@ -362,15 +243,50 @@ export function StoreLayoutClient({
                                                 {profile.fullName}
                                             </p>
                                         </div>
+
+                                        <Button
+                                            asChild
+                                            size="sm"
+                                            variant="ghost"
+                                            className="flex items-center gap-3 w-full justify-start px-4 py-3 text-sm font-bold text-slate-800 hover:bg-blue-600 hover:text-white"
+                                        >
+                                            <Link
+                                                href="/stores"
+                                                onClick={() =>
+                                                    setIsUserMenuOpen(false)
+                                                }
+                                            >
+                                                <SwitchCamera className="h-4 w-4" />
+                                                <span>Ganti Toko</span>
+                                            </Link>
+                                        </Button>
+
+                                        <Button
+                                            asChild
+                                            size="sm"
+                                            variant="ghost"
+                                            className="flex items-center gap-3 w-full justify-start px-4 py-3 text-sm text-slate-800 hover:bg-blue-600 hover:text-white"
+                                        >
+                                            <Link
+                                                href={`/stores/${store.slug}/checkout`}
+                                                onClick={() =>
+                                                    setIsUserMenuOpen(false)
+                                                }
+                                            >
+                                                <ShoppingCart className="h-4 w-4" />
+                                                <span>Kasir</span>
+                                            </Link>
+                                        </Button>
+
                                         <button
                                             onClick={() => {
                                                 setIsUserMenuOpen(false);
                                                 handleLogout();
                                             }}
-                                            className="flex items-center gap-3 w-full px-4 py-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50/50 transition-colors font-bold border-t border-slate-50"
+                                            className="flex items-center gap-3 w-full px-4 py-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50/50 transition-colors font-bold border-t border-slate-50 text-left"
                                         >
                                             <LogOut className="w-4 h-4 text-red-500" />
-                                            Keluar Akun
+                                            <span>Keluar Akun</span>
                                         </button>
                                     </div>
                                 </>
@@ -380,7 +296,8 @@ export function StoreLayoutClient({
                 </header>
 
                 {/* Main Content Area */}
-                <main className="flex-1 overflow-y-auto bg-slate-50/60 p-8">
+                {/* Mengubah padding 'p-4 md:p-8' agar tidak terlalu sempit di layar HP */}
+                <main className="flex-1 overflow-y-auto bg-slate-50/60 p-4 md:p-8">
                     <div className="max-w-7xl mx-auto">{children}</div>
                 </main>
             </div>

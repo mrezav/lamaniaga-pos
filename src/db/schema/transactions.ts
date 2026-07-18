@@ -25,7 +25,7 @@ export const PaymentStatus = {
     UNPAID: "unpaid",
     PARTIAL: "partial",
     OVERDUE: "overdue",
-    FAILED: "failed",
+    CANCELLED: "cancelled",
 } as const;
 
 export const paymentStatusOptions = [
@@ -34,7 +34,7 @@ export const paymentStatusOptions = [
     { value: PaymentStatus.UNPAID, label: "Belum Dibayar" },
     { value: PaymentStatus.PARTIAL, label: "Dibayar Sebagian" },
     { value: PaymentStatus.OVERDUE, label: "Jatuh Tempo" },
-    { value: PaymentStatus.FAILED, label: "Dibatalkan" },
+    { value: PaymentStatus.CANCELLED, label: "Dibatalkan" },
 ] as const;
 
 export const PaymentStatusValues = [
@@ -42,7 +42,7 @@ export const PaymentStatusValues = [
     PaymentStatus.UNPAID,
     PaymentStatus.PARTIAL,
     PaymentStatus.OVERDUE,
-    PaymentStatus.FAILED,
+    PaymentStatus.CANCELLED,
 ] as const;
 
 export type PaymentStatus = (typeof PaymentStatusValues)[number];

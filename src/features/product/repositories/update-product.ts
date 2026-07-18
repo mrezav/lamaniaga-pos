@@ -1,7 +1,8 @@
 import { db } from "@/db";
 import { products, productVariants } from "@/db/schema";
-import { eq, inArray, InferInsertModel } from "drizzle-orm";
+import { and, eq, inArray, InferInsertModel } from "drizzle-orm";
 import { UpdateProductFormValues } from "../schemas/product-schema";
+import { generateSku } from "@/utils";
 
 type DBVariantInsert = InferInsertModel<typeof productVariants>;
 
@@ -22,9 +23,14 @@ export async function updateProduct(
                 description: validatedData.description,
                 isActive: validatedData.isActive,
                 imageUrl: newImageUrl ?? validatedData.imageUrl,
-                storeId: validatedData.storeId,
+                // storeId: validatedData.storeId,
             })
-            .where(eq(products.id, productId));
+            .where(
+                and(
+                    eq(products.id, productId),
+                    eq(products.storeId, validatedData.storeId),
+                ),
+            );
 
         // 2. Update dan insert data varian langsung berdasarkan ID-nya masing-masing
         for (const variant of validatedData.variants) {
@@ -33,34 +39,41 @@ export async function updateProduct(
                 color: variant.color || "",
             };
 
+            const newSku = generateSku(validatedData.name, validatedData.merk);
+
             if (!variant.id) {
                 // INSERT: Bentuk objek yang strict mematuhi aturan InferInsertModel Drizzle
                 const insertPayload: DBVariantInsert = {
                     productId: productId,
-                    sku: variant.sku ?? "",
+                    sku: variant.sku || newSku,
                     price: variant.price.toString(),
                     stock: variant.stock.toString(),
                     unit: variant.unit,
                     attributes: dbAttributes,
-                    storeId: validatedData.storeId,
+                    // storeId: validatedData.storeId,
                 };
 
                 await tx.insert(productVariants).values(insertPayload);
             } else {
                 // UPDATE: Kita bentuk payload khusus update (bisa partial)
                 const updatePayload = {
-                    sku: variant.sku ?? "",
+                    sku: variant.sku || newSku,
                     price: variant.price.toString(),
                     stock: variant.stock.toString(),
                     unit: variant.unit,
                     attributes: dbAttributes,
-                    storeId: validatedData.storeId,
+                    // storeId: validatedData.storeId,
                 };
 
                 await tx
                     .update(productVariants)
                     .set(updatePayload)
-                    .where(eq(productVariants.id, variant.id));
+                    .where(
+                        and(
+                            eq(productVariants.id, variant.id),
+                            eq(productVariants.productId, productId),
+                        ),
+                    );
             }
         }
 
