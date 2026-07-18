@@ -62,10 +62,10 @@ export const getStatusConfig = (
                 className: "bg-rose-500/10 text-rose-600 border-rose-500/20",
                 icon: <ClockAlert className="h-3 w-3 mr-1 shrink-0" />,
             };
-        case PaymentStatus.FAILED:
+        case PaymentStatus.CANCELLED:
             return {
                 label: paymentStatusOptions.find(
-                    (val) => val.value == PaymentStatus.FAILED,
+                    (val) => val.value == PaymentStatus.CANCELLED,
                 )?.label,
                 className: "bg-slate-500/10 text-slate-600 border-slate-500/20",
                 icon: <XCircle className="h-3 w-3 mr-1 shrink-0" />,
